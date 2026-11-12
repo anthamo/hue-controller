@@ -67,7 +67,7 @@
       if (!l) return;
       if (typeof message.on === "boolean") l.on = message.on;
       else if ("kelvin" in message) {
-        if (!fini(message.kelvin, 1500, 7000) || !l.reglages?.includes("blanc") || l.reglages.includes("teinte")) return;
+        if (!fini(message.kelvin, 1500, 7000) || !l.reglages?.includes("blanc")) return;
         l.mode = "blanc"; l.kelvin = message.kelvin; l.couleur = deBlanc(message.kelvin);
         memoire[l.id] = l.couleur;
       } else if ("teinte" in message || "saturation" in message) {

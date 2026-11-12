@@ -2,9 +2,15 @@
 html, body { background: transparent; margin: 0; }
 
 /* Variables du panneau Natif (design/maquette.html, DESIGN.md) */
-.natif { --police: -apple-system, "Helvetica Neue", sans-serif; --texte: #1d1d1f; --second: #5c5c61; --bord: rgba(0,0,0,.1);
-  --tuile: rgba(255,255,255,.74); --inter-off: rgba(0,0,0,.18); --inter-on: #34c759;
-  --creux: rgba(0,0,0,.07); --releve: #fff; --bord-fort: rgba(0,0,0,.25); }
+.natif { --police: -apple-system, "Helvetica Neue", sans-serif; --inter-on: #34c759; color-scheme: light;
+  --texte: #1d1d1f; --second: #5c5c61; --creux: rgba(0,0,0,.07); --releve: #fff; --tuile: rgba(255,255,255,.74);
+  --avant: #fff; --voile: rgba(255,255,255,.8); --bord: rgba(0,0,0,.1); --bord-fort: rgba(0,0,0,.25);
+  --piste: rgba(0,0,0,.14); --inter-off: rgba(0,0,0,.18); --plein-fond: #1d1d1f; --plein-texte: #fff; --anneau: rgba(255,255,255,.9); }
+/* Mode sombre : le verre s'assombrit seul, la page prend ces valeurs (DESIGN.md, « Mode sombre »). */
+html[data-theme="sombre"] .natif { color-scheme: dark;
+  --texte: #f5f5f7; --second: rgba(255,255,255,.62); --creux: rgba(255,255,255,.08); --releve: rgba(255,255,255,.24); --tuile: rgba(255,255,255,.1);
+  --avant: rgba(255,255,255,.2); --voile: rgba(28,28,30,.6); --bord: rgba(255,255,255,.12); --bord-fort: rgba(255,255,255,.3);
+  --piste: rgba(255,255,255,.2); --inter-off: rgba(255,255,255,.2); --plein-fond: #f5f5f7; --plein-texte: #1d1d1f; --anneau: rgba(255,255,255,.35); }
 
 /* Dans l'app, le panneau natif de macOS fournit fond, bordure, ombre et rayon. */
 .panneau { display: flex; flex-direction: column; width: 360px; height: 600px; overflow: hidden;
@@ -30,12 +36,12 @@ html, body { background: transparent; margin: 0; }
 /* Au survol : le fond s'éclaircit et l'échantillon grossit un peu, avec une lueur de sa couleur (demande d'Antho, 12/11). */
 .scene { transition: background .12s; }
 .scene i { transition: transform .12s, box-shadow .12s; }
-.scene:hover { background: #fff; }
+.scene:hover { background: var(--avant); }
 .scene:hover i { transform: scale(1.12); box-shadow: 0 2px 8px color-mix(in srgb, var(--a) 50%, transparent); }
 /* Dans la liste, la scène en cours : fond blanc, anneau à sa propre couleur, coche posée sur l'échantillon
    (demande d'Antho, 12/11). Ni gras ni coche à droite : ils coupaient « Coucher de soleil sur la savane ». */
 .scene { position: relative; }
-.scene[aria-pressed="true"] { background: #fff; box-shadow: inset 0 0 0 2px var(--a); }
+.scene[aria-pressed="true"] { background: var(--avant); box-shadow: inset 0 0 0 2px var(--a); }
 .scene[aria-pressed="true"]::after { content: ""; position: absolute; left: 16px; top: 16px; width: 16px; height: 16px; border-radius: 50%;
   background: #fff url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M4.5 8.5 7 11 11.5 5.5" fill="none" stroke="%231d1d1f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>') center / contain no-repeat;
   box-shadow: 0 1px 2px rgba(0,0,0,.2); }
@@ -44,15 +50,15 @@ html, body { background: transparent; margin: 0; }
 .titre[hidden] { display: none; }
 .actuelle { padding-bottom: 12px; }
 .carte { display: flex; align-items: center; gap: 12px; margin: 0 12px; padding: 12px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,.06);
-  background: linear-gradient(rgba(255,255,255,.8), rgba(255,255,255,.8)), var(--g), #fff; }
-.carte .echantillon { flex: none; width: 48px; height: 48px; border-radius: 6px; background: var(--g); box-shadow: 0 0 0 2px rgba(255,255,255,.9), 0 1px 4px rgba(0,0,0,.14); }
+  background: linear-gradient(var(--voile), var(--voile)), var(--g), var(--avant); }
+.carte .echantillon { flex: none; width: 48px; height: 48px; border-radius: 6px; background: var(--g); box-shadow: 0 0 0 2px var(--anneau), 0 1px 4px rgba(0,0,0,.14); }
 .carte .nom { font-size: 16px; line-height: 20px; font-weight: 650; }
 .carte .lampes { display: flex; gap: 4px; margin-top: 8px; }
-.carte .lampes i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); }
+.carte .lampes i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1px var(--bord-fort); }
 .carte .lampes i.eteinte { background: transparent; }
 .carte.vide { background: var(--tuile); }
 .carte.vide .nom { color: var(--second); font-weight: 400; }
-.carte.vide .echantillon { background: var(--creux, rgba(0,0,0,.07)); box-shadow: none; }
+.carte.vide .echantillon { background: var(--creux); box-shadow: none; }
 
 /* Navigateur seulement : fond de démonstration, et le rendu que le panneau natif donne dans l'app. */
 html.demo body { min-height: 100vh; display: flex; align-items: center; justify-content: center;
@@ -60,13 +66,15 @@ html.demo body { min-height: 100vh; display: flex; align-items: center; justify-
 html.demo .panneau { background: rgba(244,244,246,.82); border: 1px solid var(--bord); border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,.28);
   -webkit-backdrop-filter: blur(32px) saturate(1.6); backdrop-filter: blur(32px) saturate(1.6); }
 
+/* En sombre, le fond de démonstration imite le verre sombre ; dans l'app la page reste transparente. */
+html.demo[data-theme="sombre"] .panneau { background: rgba(40,40,44,.82); }
+
 /* Curseur d'intensité de la pièce (design/maquette.html) : piste 8 px, poignée 20 px, un seul curseur pour toute l'appli. */
-.natif { --piste: rgba(0,0,0,.14); }
 /* Le curseur est dessiné ici, sur le modèle de celui de macOS 26 : piste fine à la couleur d'accent, poignée en gélule
    qui devient une goutte de verre quand on la tient. Essayé et écarté le 12/11/2026 (essais/curseur_natif.py) :
    le curseur par défaut de WebKit (piste épaisse cerclée de blanc) et le vrai NSSlider (poignée ronde). */
 /* Le curseur dans son creux : le soleil, la piste et le soleil se lisent comme un seul réglage. */
-.groupe { display: flex; align-items: center; gap: 8px; margin: 4px 12px 12px; padding: 8px 12px; border-radius: 8px; background: var(--creux, rgba(0,0,0,.07)); color: var(--texte); }
+.groupe { display: flex; align-items: center; gap: 8px; margin: 4px 12px 12px; padding: 8px 12px; border-radius: 8px; background: var(--creux); color: var(--texte); }
 .groupe[hidden] { display: none; }
 .groupe svg { flex: none; width: 16px; height: 16px; }
 .groupe:has(input:disabled) svg { opacity: .3; }
@@ -91,7 +99,7 @@ input[type=range]:disabled { opacity: .3; cursor: default; }
 .lampe { border-radius: 8px; background: var(--tuile); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
 .lampe + .lampe { margin-top: 8px; }
 .lampe + .titre { margin-top: 12px; }
-.lampe:has(.haut:hover), .lampe.ouverte { background: #fff; }
+.lampe:has(.haut:hover), .lampe.ouverte { background: var(--avant); }
 .haut { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 12px; }
 .entree { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; height: 56px; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .halo { flex: none; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: color-mix(in srgb, var(--c, transparent) 25%, transparent); }
@@ -113,15 +121,23 @@ input[type=range]:disabled { opacity: .3; cursor: default; }
 .zone-tout:hover { color: var(--texte); }
 .zone-tout[hidden] { display: none; }
 
-/* Blanc, Saturation et Couleur : même curseur, mais la piste est un dégradé. Saturation va du blanc à la teinte pleine
-   (--fin, posée par panneau.js) ; Couleur est l'arc-en-ciel en couleurs pures. La poignée se remplit de la couleur de la lampe
-   (--pouce, posée par panneau.js) avec un contour blanc de 3 px. */
+/* Chaleur du blanc : même curseur, mais la piste est un dégradé du chaud au froid. La poignée se remplit de la couleur de la lampe
+   (--pouce, posée par panneau.js) avec un contour blanc de 3 px quand la lampe est en blanc. */
 .rang.sous { margin-top: 12px; }
 input[type=range].blanc::-webkit-slider-runnable-track { box-shadow: 0 0 0 1px var(--bord-fort); background: linear-gradient(to right, #ffb36b, #fff3e2 55%, #dbe7ff); }
-input[type=range].saturation::-webkit-slider-runnable-track { box-shadow: 0 0 0 1px var(--bord-fort); background: linear-gradient(to right, #fff, var(--fin, #f00)); }
-input[type=range].teinte::-webkit-slider-runnable-track { background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
-input[type=range].blanc::-webkit-slider-thumb, input[type=range].saturation::-webkit-slider-thumb, input[type=range].teinte::-webkit-slider-thumb { box-sizing: border-box; transition: transform .15s, box-shadow .15s; /* pas de fondu de la couleur : elle suit le doigt */ border: 3px solid #fff; background: var(--pouce, #fff); }
-input[type=range].blanc:active::-webkit-slider-thumb, input[type=range].saturation:active::-webkit-slider-thumb, input[type=range].teinte:active::-webkit-slider-thumb { background: var(--pouce, rgba(255,255,255,.4)); }
+input[type=range].blanc::-webkit-slider-thumb { box-sizing: border-box; transition: transform .15s, box-shadow .15s; /* pas de fondu de la couleur : elle suit le doigt */ border: 3px solid #fff; background: var(--pouce, #fff); }
+input[type=range].blanc:active::-webkit-slider-thumb { background: var(--pouce, rgba(255,255,255,.4)); }
+input[type=range].blanc[hidden] { display: none; }
+input[type=range].blanc.apres { margin-top: 12px; }
+
+/* Dépli d'une lampe de couleur : le sélecteur Couleur / Blanc reprend le dessin des onglets, puis la roue chromatique (192 px). */
+.pli .onglets { margin: 12px 0 0; }
+.chroma { position: relative; width: 192px; height: 192px; margin: 12px auto 0; border-radius: 50%; touch-action: none; cursor: pointer;
+  background: radial-gradient(circle closest-side, #fff, rgba(255,255,255,0)), conic-gradient(from 0deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+  box-shadow: 0 0 0 1px var(--bord); }
+.chroma[hidden] { display: none; }
+.chroma .repere { position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; box-sizing: border-box; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.3); pointer-events: none; }
+.lampe.eteinte .chroma { opacity: .3; pointer-events: none; cursor: default; }
 
 /* Roue dentée de l'en-tête : 28 px, sans fond ; creux au survol et quand les réglages sont ouverts. */
 .roue { flex: none; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--second); cursor: pointer; }
@@ -136,11 +152,11 @@ input[type=range].blanc:active::-webkit-slider-thumb, input[type=range].saturati
 .reglages .bloc { flex: none; padding: 12px; border-radius: 8px; background: var(--tuile); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
 .reglages .bloc + .bloc { margin-top: 12px; }
 .libelle { display: block; font-size: 12px; line-height: 16px; color: var(--second); }
-.champ { display: block; width: 100%; height: 28px; margin-top: 4px; padding: 0 8px; border: 0; border-radius: 6px; background: #fff; box-shadow: inset 0 0 0 1px var(--bord-fort); color: var(--texte); font: inherit; outline: none; }
+.champ { display: block; width: 100%; height: 28px; margin-top: 4px; padding: 0 8px; border: 0; border-radius: 6px; background: var(--avant); box-shadow: inset 0 0 0 1px var(--bord-fort); color: var(--texte); font: inherit; outline: none; }
 .champ:focus { outline: 2px solid var(--inter-on); }
 .statut { margin-top: 8px; font-size: 12px; line-height: 16px; color: var(--second); }
 .statut.erreur { color: var(--texte); }
-.enregistrer { display: block; height: 28px; margin-top: 8px; padding: 0 12px; border: 0; border-radius: 6px; background: var(--texte); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.enregistrer { display: block; height: 28px; margin-top: 8px; padding: 0 12px; border: 0; border-radius: 6px; background: var(--plein-fond); color: var(--plein-texte); font: inherit; font-weight: 600; cursor: pointer; }
 .enregistrer[hidden] { display: none; }
 .reglages .bloc.ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 44px; padding: 0 12px; }
 .quitter { flex: none; align-self: flex-start; height: 28px; margin-top: 12px; padding: 0; border: 0; background: none; color: var(--second); font: inherit; cursor: pointer; }

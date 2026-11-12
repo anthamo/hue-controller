@@ -38,6 +38,16 @@ function carte(s) {
     <div><div class="nom">${s ? ech(s.nom) : (etat.piece.on ? "Réglage manuel" : "Lumières éteintes")}</div><div class="lampes" aria-hidden="true">${lampes}</div></div></div>`;
 }
 
+// Apparence : suit celle du Mac. En démonstration (navigateur), ?theme=sombre ou ?theme=clair la force.
+const apparenceSombre = window.matchMedia("(prefers-color-scheme: dark)");
+function poserTheme() {
+  const force = new URLSearchParams(location.search).get("theme");
+  const sombre = !pont && (force === "sombre" || force === "clair") ? force === "sombre" : apparenceSombre.matches;
+  document.documentElement.dataset.theme = sombre ? "sombre" : "clair";
+}
+poserTheme();
+apparenceSombre.addEventListener("change", poserTheme);
+
 // Le curseur est créé une seule fois : le redessiner en plein geste le détruirait sous le doigt.
 let curseur = null, valeur = null, groupe = null;
 let tenu = false, dernierGeste = 0;
@@ -216,14 +226,11 @@ function construireLignes(liste) {
       el.className = "lampe";
       el.dataset.id = l.id;
       el.innerHTML = `<div class="haut"><button type="button" class="entree" aria-expanded="false"><span class="halo"><i></i></span><span class="textes"><span class="nom"></span><span class="infos"></span></span></button><button class="inter" role="switch" aria-checked="false"></button></div>
-        <div class="pli" hidden><div class="rang"><span>Luminosité</span><output></output></div><input type="range" min="1" max="100" value="50">${
-          // Lampe de couleur : Saturation puis Couleur, jamais Blanc (tranché par Antho le 12/11). Lampe blanche à
-          // température réglable : Blanc. Sinon, la luminosité seule.
-          l.reglages?.includes("teinte") ? `<div class="rang sous"><span>Saturation</span></div><input type="range" class="saturation" min="0" max="100" value="100"><div class="rang sous"><span>Couleur</span></div><input type="range" class="teinte" min="0" max="360" value="30">`
-          : l.reglages?.includes("blanc") ? `<div class="rang sous"><span>Blanc</span></div><input type="range" class="blanc" min="2000" max="6500" value="2700">` : ""}</div>`;
+        <div class="pli" hidden><div class="rang"><span>Luminosité</span><output></output></div><input type="range" min="1" max="100" value="50">${sousLuminosite(l)}</div>`;
       const ligne = { id: l.id, el, halo: el.querySelector(".halo"), nom: el.querySelector(".nom"), infos: el.querySelector(".infos"),
         entree: el.querySelector(".entree"), pli: el.querySelector(".pli"), valeur: el.querySelector("output"),
-        curseur: el.querySelector("input"), inter: el.querySelector(".inter"), tenu: false, dernierGeste: 0, couleur: null };
+        curseur: el.querySelector("input"), inter: el.querySelector(".inter"), tenu: false, dernierGeste: 0, couleur: null,
+        choix: null, segments: [...el.querySelectorAll("[data-mode]")] };
       ligne.curseur.addEventListener("pointerdown", () => { ligne.tenu = true; });
       ligne.curseur.addEventListener("input", () => {
         ligne.dernierGeste = Date.now(); rattraper();
@@ -235,43 +242,70 @@ function construireLignes(liste) {
         dessiner();
         envoyer({ action: "lampe", id: ligne.id, intensite: v });
       });
-      // Blanc, Saturation et Couleur : créés avec la carte, chacun avec son « tenu / touché », comme la luminosité (décision 7).
+      // Chaleur du blanc et roue chromatique : créées avec la carte, chacune avec son « tenu / touché », comme la luminosité (décision 7).
       ligne.reg = {};
-      ["blanc", "saturation", "teinte"].forEach(type => {
-        const el = el_(ligne, type);
-        if (!el) return;
-        const r = { el, tenu: false, dernierGeste: 0 };
-        ligne.reg[type] = r;
-        el.addEventListener("pointerdown", () => { r.tenu = true; });
-        el.addEventListener("input", () => gesteReglage(ligne, type));
-      });
+      const blanc = el.querySelector("input.blanc");
+      if (blanc) {
+        const r = { el: blanc, tenu: false, dernierGeste: 0 };
+        ligne.reg.blanc = r;
+        blanc.addEventListener("pointerdown", () => { r.tenu = true; });
+        blanc.addEventListener("input", () => gesteReglage(ligne, { kelvin: Math.round(Number(blanc.value)) }));
+      }
+      const roue = el.querySelector(".chroma");
+      if (roue) {
+        const r = { el: roue, repere: roue.querySelector(".repere"), tenu: false, dernierGeste: 0 };
+        ligne.reg.roue = r;
+        // La teinte est l'angle depuis le haut, dans le sens des aiguilles ; la saturation, la distance au centre (bornée au bord).
+        const geste = e => {
+          const c = roue.getBoundingClientRect(), rayon = c.width / 2;
+          const dx = e.clientX - (c.left + rayon), dy = e.clientY - (c.top + rayon);
+          const angle = (Math.atan2(dx, -dy) * 180 / Math.PI + 360) % 360;
+          gesteReglage(ligne, { teinte: Math.round(angle) % 360, saturation: Math.min(100, Math.round(Math.hypot(dx, dy) / rayon * 100)) });
+        };
+        roue.addEventListener("pointerdown", e => {
+          if (!etat?.lampes.find(x => x.id === ligne.id)?.on) return;
+          r.tenu = true;
+          try { roue.setPointerCapture(e.pointerId); } catch (_) { /* pas de capture possible : le geste continue sans */ }
+          geste(e);
+        });
+        roue.addEventListener("pointermove", e => { if (r.tenu) geste(e); });
+        const fin = () => { r.tenu = false; };
+        roue.addEventListener("pointerup", fin);
+        roue.addEventListener("pointercancel", fin);
+      }
       lignes.set(l.id, ligne);
       liste.appendChild(el);
     });
   });
 }
 
-// Un interrupteur est un geste voulu : l'état qu'il provoque doit passer sur les trois curseurs.
-function libere(g) { g.dernierGeste = 0; g.local = null; Object.values(g.reg).forEach(r => { r.dernierGeste = 0; }); }
-const el_ = (ligne, type) => ligne.el.querySelector("input." + type);
+// Sous Luminosité : lampe de couleur = sélecteur Couleur / Blanc (s'il y a un blanc) puis roue et chaleur, un seul visible ;
+// lampe blanche = la chaleur ; blanc fixe = rien.
+function sousLuminosite(l) {
+  const couleur = l.reglages?.includes("teinte"), blanc = l.reglages?.includes("blanc");
+  if (!couleur) return blanc ? `<div class="rang sous"><span>Chaleur</span></div><input type="range" class="blanc" min="2000" max="6500" value="2700">` : "";
+  return (blanc ? `<div class="onglets mode" role="tablist" aria-label="Réglage de la lampe"><button type="button" role="tab" data-mode="couleur" aria-selected="true">Couleur</button><button type="button" role="tab" data-mode="blanc" aria-selected="false">Blanc</button></div>` : "")
+    + `<div class="chroma" role="slider" aria-valuemin="0" aria-valuemax="359" aria-valuenow="0"><i class="repere"></i></div>`
+    + (blanc ? `<input type="range" class="blanc apres" min="2000" max="6500" value="2700">` : "");
+}
 
-// Blanc, Saturation ou Couleur tiré : la lampe prend tout de suite la couleur du geste (halo, poignées, ligne d'état),
-// l'état reçu fera foi après. Saturation et Couleur partent toujours ensemble : le bridge reçoit un seul couple.
-function gesteReglage(g, type) {
+// Un interrupteur est un geste voulu : l'état qu'il provoque doit passer sur tous les curseurs.
+function libere(g) { g.dernierGeste = 0; g.local = null; Object.values(g.reg).forEach(r => { r.dernierGeste = 0; }); }
+
+// Chaleur ou roue tirée : la lampe prend tout de suite la couleur du geste (halo, repère, ligne d'état),
+// l'état reçu fera foi après. Teinte et saturation partent toujours ensemble : le bridge reçoit un seul couple.
+function gesteReglage(g, v) {
   const lampe = etat?.lampes.find(x => x.id === g.id);
-  const r = g.reg[type];
+  const r = "kelvin" in v ? g.reg.blanc : g.reg.roue;
   if (!lampe || !r) return;
   r.dernierGeste = Date.now(); rattraper();
-  const v = Math.round(Number(r.el.value));
   let message;
-  if (type === "blanc") {
-    lampe.mode = "blanc"; lampe.kelvin = v; lampe.couleur = deBlanc(v);
-    message = { action: "lampe", id: g.id, kelvin: v };
+  if ("kelvin" in v) {
+    lampe.mode = "blanc"; lampe.kelvin = v.kelvin; lampe.couleur = deBlanc(v.kelvin);
+    message = { action: "lampe", id: g.id, kelvin: v.kelvin };
   } else {
-    const teinte = type === "teinte" ? v : Math.round(Number(g.reg.teinte.el.value));
-    const saturation = type === "saturation" ? v : Math.round(Number(g.reg.saturation.el.value));
-    lampe.mode = "teinte"; lampe.teinte = teinte; lampe.saturation = saturation; lampe.kelvin = null; lampe.couleur = couleurDe(teinte, saturation);
-    message = { action: "lampe", id: g.id, teinte, saturation };
+    lampe.mode = "teinte"; lampe.teinte = v.teinte; lampe.saturation = v.saturation; lampe.kelvin = null; lampe.couleur = couleurDe(v.teinte, v.saturation);
+    message = { action: "lampe", id: g.id, teinte: v.teinte, saturation: v.saturation };
   }
   g.couleur = lampe.couleur;
   // Copie locale : tant que la carte est touchée, un état reçu en retard ne la fait pas revenir en arrière.
@@ -281,10 +315,10 @@ function gesteReglage(g, type) {
   envoyer(message);
 }
 
-// Saturation et Couleur forment un seul réglage : l'un des deux touché, aucun ne reprend l'état reçu.
+// Réglage tenu, ou touché depuis moins de 1,5 s : il ignore l'état reçu (décision 7).
 const touche = r => !!r && (r.tenu || Date.now() - r.dernierGeste < 1500);
 
-// Un des trois curseurs de la carte est tenu ou vient d'être touché.
+// Un des curseurs ou la roue de la carte est tenu ou vient d'être touché.
 const carteTouchee = g => g.tenu || Date.now() - g.dernierGeste < 1500 ||
   Object.values(g.reg).some(r => r.tenu || Date.now() - r.dernierGeste < 1500);
 
@@ -337,28 +371,34 @@ function majLignes() {
     g.pli.hidden = !ouvert;
     g.el.classList.toggle("ouverte", ouvert);
     // Teinte et saturation absentes de l'état : 30 et 100.
-    const h = lm.teinte != null ? lm.teinte : 30, s = lm.saturation != null ? lm.saturation : 100;
-    const groupeCouleur = touche(g.reg.saturation) || touche(g.reg.teinte);
-    for (const type of ["blanc", "saturation", "teinte"]) {
-      const r = g.reg[type];
-      if (!r) continue;
-      r.el.setAttribute("aria-label", { blanc: "Blanc de ", saturation: "Saturation de ", teinte: "Couleur de " }[type] + l.nom);
-      if (type === "blanc") {
-        // La poignée de Blanc porte la couleur de la lampe quand la lampe est en blanc.
-        r.el.style.setProperty("--pouce", lm.mode === "blanc" && coul ? coul : "");
-        if (touche(r)) continue;
+    const h = lm.teinte != null ? lm.teinte : 30, sat = lm.saturation != null ? lm.saturation : 100;
+    // Segment ouvert : le choix de l'utilisateur tant que la carte n'est pas refermée, sinon le mode de la lampe.
+    const mode = g.choix || (lm.mode === "blanc" ? "blanc" : "couleur");
+    g.segments.forEach(b => b.setAttribute("aria-selected", String(b.dataset.mode === mode)));
+    const blanc = g.reg.blanc, roue = g.reg.roue;
+    if (blanc) {
+      blanc.el.hidden = !!roue && mode !== "blanc";
+      blanc.el.setAttribute("aria-label", "Chaleur de " + l.nom);
+      // La poignée porte la couleur de la lampe quand la lampe est en blanc.
+      blanc.el.style.setProperty("--pouce", lm.mode === "blanc" && coul ? coul : "");
+      if (!touche(blanc)) {
         const [mini, maxi] = bornes(l);
-        r.el.min = mini; r.el.max = maxi;
-        r.el.value = Math.min(maxi, Math.max(mini, l.mode === "blanc" && l.kelvin != null ? l.kelvin : 2700));
-      } else {
-        // Lampe en couleur : les deux poignées portent la couleur en cours (blanches si la lampe est en blanc) ;
-        // la piste de Saturation va du blanc à la teinte pleine.
-        r.el.style.setProperty("--pouce", lm.mode === "blanc" ? "" : couleurDe(h, s));
-        if (type === "saturation") r.el.style.setProperty("--fin", couleurDe(h, 100));
-        if (groupeCouleur) continue;
-        r.el.value = type === "teinte" ? h : s;
+        blanc.el.min = mini; blanc.el.max = maxi;
+        blanc.el.value = Math.min(maxi, Math.max(mini, l.mode === "blanc" && l.kelvin != null ? l.kelvin : 2700));
       }
-      r.el.disabled = !allumee;
+      blanc.el.disabled = !allumee;
+    }
+    if (roue) {
+      roue.el.hidden = mode !== "couleur";
+      roue.el.setAttribute("aria-label", "Couleur de " + l.nom);
+      roue.el.setAttribute("aria-valuenow", String(h));
+      roue.el.setAttribute("aria-valuetext", `teinte ${h}, saturation ${sat} %`);
+      roue.el.setAttribute("aria-disabled", String(!allumee));
+      // Le repère est à (teinte, saturation) : l'angle depuis le haut, la distance depuis le centre (rayon 96 px).
+      const a = h * Math.PI / 180, d = sat / 100 * 96;
+      roue.repere.style.left = (96 + d * Math.sin(a)).toFixed(1) + "px";
+      roue.repere.style.top = (96 - d * Math.cos(a)).toFixed(1) + "px";
+      roue.repere.style.background = couleurDe(h, sat);
     }
     if (garde) return;
     g.curseur.value = v;
@@ -371,7 +411,7 @@ function afficherOnglet() {
   const ok = etat.connexion === "ok";
   const scenes = racine.querySelector(".corps:not(.liste)"), liste = racine.querySelector(".liste");
   racine.querySelector(".onglets").hidden = !ok;
-  racine.querySelectorAll("[role=tab]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.onglet === onglet)));
+  racine.querySelectorAll("[data-onglet]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.onglet === onglet)));
   racine.querySelector(".actuelle").hidden = !ok || onglet !== "scenes";
   racine.querySelector(".titre-scenes").hidden = !ok || onglet !== "scenes";
   scenes.hidden = ok && onglet !== "scenes";
@@ -461,7 +501,17 @@ racine.addEventListener("click", e => {
     envoyer({ action: "zone", id: z.id, on });
   } else if (b.classList.contains("entree")) {
     const id = b.closest(".lampe").dataset.id;
+    // Refermer une carte oublie le segment choisi : elle se rouvre sur le mode de la lampe.
+    if (ouverte) { const ancienne = lignes.get(ouverte); if (ancienne) ancienne.choix = null; }
     ouverte = ouverte === id ? null : id;
+    majLignes();
+    // La carte dépliée est plus haute que la place restante (la roue fait 192 px) : on la fait défiler en vue.
+    if (ouverte) b.closest(".lampe").scrollIntoView({ block: "nearest", behavior: "smooth" });
+  } else if (b.dataset.mode) {
+    // Changer de segment n'envoie rien : le premier geste sur la roue ou la chaleur change la lampe.
+    const g = lignes.get(b.closest(".lampe").dataset.id);
+    if (!g) return;
+    g.choix = b.dataset.mode;
     majLignes();
   } else if (b.closest(".lampe")) {
     const id = b.closest(".lampe").dataset.id, g = lignes.get(id), l = etat.lampes.find(x => x.id === id);
