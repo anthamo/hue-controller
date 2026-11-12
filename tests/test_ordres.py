@@ -145,8 +145,11 @@ class TestLampe(unittest.TestCase):
         for n in (2199, 6501, 0, -1, True, "3000", None, [3000]):
             self.assertIsNone(ordres.traduire({"action": "lampe", "id": "l4", "kelvin": n}, ETAT, None))
         self.assertIsNone(ordres.traduire({"action": "lampe", "id": "l2", "kelvin": 3000}, ETAT, None))
-        # Une lampe de couleur n'a pas de blanc en kelvins, même si elle a "blanc" dans ses réglages.
-        self.assertIsNone(ordres.traduire({"action": "lampe", "id": "l1", "kelvin": 3000}, ETAT, None))
+        # Une lampe de couleur qui a aussi le blanc l'accepte : elle peut être mise en blanc, à la chaleur voulue.
+        self.assertEqual(
+            ordres.traduire({"action": "lampe", "id": "l1", "kelvin": 4000}, ETAT, None),
+            ("light", "l1", {"color_temperature": {"mirek": 250}, "dynamics": {"duration": ordres.FONDU_MS}}),
+        )
 
     def test_couleur(self):
         o = ordres.traduire({"action": "lampe", "id": "l1", "teinte": 240, "saturation": 100}, ETAT, None)

@@ -12,7 +12,6 @@ from pathlib import Path
 
 import objc
 from AppKit import (
-    NSAppearance,
     NSApplication,
     NSApplicationActivationPolicyAccessory,
     NSBackingStoreBuffered,
@@ -29,6 +28,7 @@ from AppKit import (
     NSScreen,
     NSStatusBar,
     NSVariableStatusItemLength,
+    NSView,
     NSVisualEffectView,
     NSWindowStyleMaskBorderless,
     NSWindowStyleMaskNonactivatingPanel,
@@ -45,6 +45,7 @@ DOSSIER_PAGE = Path(__file__).parent / "panneau"
 LARGEUR, HAUTEUR = 360, 600
 DELAI_APRES_ORDRE = 0.6  # le bridge met un instant à refléter l'ordre
 DELAI_SECONDE_LECTURE = 1.4  # puis une seconde relecture : la première tombe quand la page ignore encore l'état
+MARGE = 32  # la fenêtre dépasse le panneau de cette marge, pour que son ombre ait la place de s'éteindre
 RAYON = 20  # coins du panneau, comme ceux des panneaux de la barre de menus du système
 ECART = 6  # entre la barre de menus et le panneau
 RELECTURE_OUVERT = 5  # secondes entre deux lectures du vif, panneau ouvert
@@ -252,18 +253,22 @@ class App(NSObject):
         )
 
         self.panneau = Fenetre.alloc().initWithContentRect_styleMask_backing_defer_(
-            NSMakeRect(0, 0, LARGEUR, HAUTEUR),
+            NSMakeRect(0, 0, LARGEUR + 2 * MARGE, HAUTEUR + 2 * MARGE),
             NSWindowStyleMaskBorderless | NSWindowStyleMaskNonactivatingPanel,  # ne prend pas la main à l'app en cours
             NSBackingStoreBuffered,
             False,
         )
         self.panneau.setOpaque_(False)
         self.panneau.setBackgroundColor_(NSColor.clearColor())
-        self.panneau.setHasShadow_(True)
+        # Pas d'ombre de fenêtre : macOS la dessinait sur le rectangle de la fenêtre, d'où un cadre gris et un fond dans
+        # les coins arrondis (vu par Antho le 12/11/2026). L'ombre est celle du panneau lui-même, dans la marge.
+        self.panneau.setHasShadow_(False)
         self.panneau.setLevel_(NSPopUpMenuWindowLevel)
-        # Le panneau reste clair, même si le Mac est en mode sombre : la page n'a que des couleurs claires.
-        self.panneau.setAppearance_(NSAppearance.appearanceNamed_("NSAppearanceNameAqua"))
-        self.panneau.setContentView_(fond_en_verre(self.page))
+        cadre = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, LARGEUR + 2 * MARGE, HAUTEUR + 2 * MARGE))
+        fond = fond_en_verre(self.page)
+        fond.setFrameOrigin_((MARGE, MARGE))
+        cadre.addSubview_(fond)
+        self.panneau.setContentView_(cadre)
         # Un clic ailleurs referme le panneau (les clics dans nos propres fenêtres n'arrivent pas ici).
         self.guet = NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(
             NSEventMaskLeftMouseDown | NSEventMaskRightMouseDown, lambda _: self.fermer()
@@ -292,13 +297,8 @@ class App(NSObject):
         ecran = NSScreen.mainScreen().frame()
         # Centré sous l'icône, sans sortir de l'écran.
         x = min(max(icone.origin.x + icone.size.width / 2 - LARGEUR / 2, 8), ecran.size.width - LARGEUR - 8)
-        self.panneau.setFrameOrigin_((x, icone.origin.y - HAUTEUR - ECART))
+        self.panneau.setFrameOrigin_((x - MARGE, icone.origin.y - HAUTEUR - ECART - MARGE))
         self.panneau.makeKeyAndOrderFront_(None)
-        # L'ombre de la fenêtre est calculée sur sa forme. Calculée trop tôt, elle garde celle d'un rectangle : un cadre
-        # gris et un fond apparaissent dans les coins arrondis (vu par Antho le 12/11/2026). On la recalcule une fois
-        # la fenêtre affichée, puis une fois le verre dessiné.
-        self.panneau.invalidateShadow()
-        AppHelper.callLater(0.15, self.panneau.invalidateShadow)
         self.donner_accent()
         self.pousser(self.dernier_etat())
         if self.travail:

@@ -80,9 +80,9 @@ def traduire(message, etat_courant, id_groupe):
             return ("light", identifiant, {"dimming": {"brightness": valeur}, "dynamics": {"duration": FONDU_MS}})
         if champ == "kelvin":
             kelvins = lampe.get("kelvins")
-            # Le blanc en kelvins est réservé aux lampes blanches : une lampe de couleur règle teinte et saturation
-            # (tranché par Antho le 12/11).
-            if "blanc" in reglages and "teinte" not in reglages and kelvins and kelvins[0] <= valeur <= kelvins[1]:
+            # Toute lampe qui a le blanc : une lampe de couleur passe de la couleur au blanc par un sélecteur dans son
+            # dépli, et règle alors sa chaleur (Antho, 12/11 : les deux réglages ne sont jamais montrés ensemble).
+            if "blanc" in reglages and kelvins and kelvins[0] <= valeur <= kelvins[1]:
                 return ("light", identifiant, {"color_temperature": {"mirek": round(1e6 / valeur)}, "dynamics": {"duration": FONDU_MS}})
     elif action == "zone":
         identifiant, on = message.get("id"), message.get("on")

@@ -24,7 +24,23 @@ Direction **Natif**, retenue par Antho le 12/11/2026. Maquette de référence : 
 | Accent (interrupteur allumé, anneau de la scène en cours) | la couleur d'accent du Mac, lue par l'app ; `#34c759` dans un navigateur |
 | Interrupteur éteint | `rgba(0,0,0,.18)` |
 
-Le panneau reste clair même quand le Mac est en mode sombre (l'app l'impose). Un vrai mode sombre reste à décider.
+**Mode sombre** (12/11) : le panneau suit l'apparence du Mac. Le verre s'assombrit seul ; la page prend ces valeurs :
+
+| Rôle | Clair | Sombre |
+| --- | --- | --- |
+| Texte | `#1d1d1f` | `#f5f5f7` |
+| Texte secondaire | `#5c5c61` | `rgba(255,255,255,.62)` |
+| Creux | `rgba(0,0,0,.07)` | `rgba(255,255,255,.08)` |
+| Relevé (onglet choisi) | `#fff` | `rgba(255,255,255,.24)` |
+| Tuile, carte | `rgba(255,255,255,.74)` | `rgba(255,255,255,.1)` |
+| Surface en avant (survol, carte ouverte, scène en cours, champ) | `#fff` | `rgba(255,255,255,.2)` |
+| Voile de la carte Scène actuelle | `rgba(255,255,255,.8)` | `rgba(28,28,30,.6)` |
+| Filets | `rgba(0,0,0,.1)` | `rgba(255,255,255,.12)` |
+| Contours forts | `rgba(0,0,0,.25)` | `rgba(255,255,255,.3)` |
+| Piste vide d'un curseur, interrupteur éteint | `rgba(0,0,0,.14)` / `rgba(0,0,0,.18)` | `rgba(255,255,255,.2)` |
+| Bouton plein (Enregistrer) | fond `#1d1d1f`, texte `#fff` | fond `#f5f5f7`, texte `#1d1d1f` |
+
+Les poignées des curseurs, le rond des interrupteurs et la pastille de la coche restent blancs dans les deux modes.
 
 ## Structure du panneau (commune aux trois pistes)
 
@@ -36,7 +52,10 @@ De haut en bas, dans l'ordre des gestes :
 4. **Scène actuelle** : un bloc fixe, une carte teintée aux couleurs de la scène en cours : grand échantillon, nom, et une pastille par lampe à sa couleur du moment (vide si la lampe est éteinte). Quand aucune scène n'est en cours : « Réglage manuel » si des lampes sont allumées, « Lumières éteintes » sinon (« Aucune » ne se comprenait pas). **Scènes** : les 22 tuiles sur deux colonnes (échantillon, puis nom), dans l'ordre du bridge, qui défilent. Un clic applique. Dans la liste, la scène en cours a un fond blanc, un anneau à sa propre couleur et une coche posée sur son échantillon (demande d'Antho, 12/11 ; ni gras ni coche à droite, qui coupaient les noms longs).
 5. **Lampes** : rangées par zone, dans l'ordre où le bridge donne les zones (décidé par Antho le 12/11). Par zone : son nom en titre, puis **une carte par lampe** (refait le 12/11 sur un modèle fourni par Antho : la ligne compacte avec curseur et interrupteur côte à côte se lisait mal, deux gélules blanches collées quand tout est à 100 %).
    - Carte fermée, toujours dans cet ordre : un halo à la couleur de la lampe, le nom en gras et dessous son état en une ligne (« 85 % · Blanc chaud », « 60 % · Couleur », « Éteinte »), l'interrupteur. Pas de chevron (retiré à la demande d'Antho) : le fond qui blanchit au survol dit que la carte s'ouvre.
-   - Un clic sur la carte (hors interrupteur) la déplie, une seule à la fois : « Luminosité », sa valeur, et le curseur sur toute la largeur. Sous Luminosité, selon la lampe (tranché par Antho le 12/11) : pour une lampe de couleur, **Saturation** (du blanc à la couleur pleine) puis **Couleur** (l'arc-en-ciel), sans curseur Blanc ; pour une lampe blanche à température réglable, **Blanc** (du chaud au froid) ; pour une lampe à blanc fixe (« Plafond cuisine », une Hue white), rien de plus. Les poignées de Saturation et de Couleur sont remplies de la couleur en cours quand la lampe est en couleur, blanches quand une scène l'a mise en blanc.
+   - Un clic sur la carte (hors interrupteur) la déplie, une seule à la fois : « Luminosité », sa valeur, et le curseur sur toute la largeur. Sous Luminosité, selon la lampe (12/11) :
+     - lampe de couleur : un sélecteur à deux segments, **Couleur** et **Blanc**, ouvert sur le mode en cours de la lampe. Couleur montre une **roue chromatique** (la teinte autour, la saturation du centre vers le bord) : Antho la trouve plus précise que deux curseurs. Blanc montre le curseur de **chaleur**, du chaud au froid. Les deux réglages ne sont jamais montrés ensemble. Changer de segment n'envoie rien : c'est le premier geste sur la roue ou le curseur qui change la lampe ;
+     - lampe blanche à température réglable : le curseur de chaleur seul ;
+     - lampe à blanc fixe (« Plafond cuisine », une Hue white) : rien de plus, l'ampoule n'a pas ce réglage.
    - Le curseur d'une lampe se remplit de la couleur d'accent, comme celui de la pièce : rempli de la couleur d'une lampe blanche, il ne se voyait pas. La couleur de la lampe est portée par le halo.
 6. **Réglages** : une roue dentée dans l'en-tête, entre le nom de la pièce et l'interrupteur. Elle remplace tout ce qui est sous l'en-tête par la vue Réglages ; « Terminé » en revient. Pas de pied de panneau.
    - **Bridge** : l'adresse (un champ), l'état de la connexion en une phrase (« Connecté », ou la phrase d'erreur), « Enregistrer » qui n'apparaît que si l'adresse a changé.
@@ -81,7 +100,6 @@ Gardé : le titre de pièce plus grand, le curseur dans un creux, la carte de sc
 
 ## Questions ouvertes
 
-- Le mode sombre de macOS : suivre le système, ou rester clair ?
 - 22 scènes sur deux colonnes : il faut défiler (accepté avec la disposition en tuiles).
 - 7 scènes sont des blancs presque identiques à l'écran : faut-il un autre signe que la couleur pour celles-là (un pictogramme, comme dans l'app Hue) ?
 - « Salle à manger - plafond » reste coupé dans la liste (nom à raccourcir dans l'app Hue, ou panneau plus large).

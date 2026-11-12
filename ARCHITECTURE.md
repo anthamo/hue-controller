@@ -58,7 +58,7 @@ C'est la frontière la plus importante : la page et Python peuvent être écrits
 | `{action: "lampe", id, on}` | allumer / éteindre une lampe | 3 |
 | `{action: "lampe", id, intensite}` | intensité d'une lampe, 1 à 100 | 3 |
 | `{action: "zone", id, on}` | tout allumer / tout éteindre dans une zone (Cuisine, Salon…) | 3 |
-| `{action: "lampe", id, kelvin}` | blanc, dans les bornes de la lampe ; seulement pour une lampe blanche (sans couleur) | 4 |
+| `{action: "lampe", id, kelvin}` | blanc (sa chaleur), dans les bornes de la lampe ; pour toute lampe qui a le blanc | 4 |
 | `{action: "lampe", id, teinte, saturation}` | couleur : teinte 0 à 360 et saturation 0 à 100, toujours envoyées ensemble | 4 |
 | `{action: "reglages"}` | la page ouvre les réglages : elle veut l'adresse du bridge et l'état du lancement automatique | 5 |
 | `{action: "reglages", bridge_ip}` | changer l'adresse du bridge | 5 |
@@ -116,5 +116,6 @@ Aux messages de réglages, Python répond par `window.reglages({"bridge_ip": "19
 | La transparence de la page repose sur un réglage non documenté de WebKit (`drawsBackground`) | Si une mise à jour de macOS le casse : fond uni de la couleur du panneau, une ligne à changer |
 | Le verre (`NSGlassEffectView`) n'existe que sur macOS 26 | Repli écrit sur le flou des versions d'avant (`NSVisualEffectView`), **jamais essayé** : à vérifier sur le second Mac du foyer avant d'y installer l'app |
 | 22 scènes + 11 lampes dans 360 px : le panneau défile | Accepté (DESIGN). Hauteur du panneau fixe |
+| L'ombre de la fenêtre dessinait un cadre gris dans les coins arrondis | La fenêtre n'a plus d'ombre propre et dépasse le panneau de 32 px : l'ombre est celle du verre, qui s'éteint dans cette marge |
 | La clé du bridge est partagée avec le téléphone | Si on la révoque, les deux tombent. Accepté |
-| Mode sombre de macOS | Non traité : le texte sombre sur panneau sombre serait illisible. À trancher avant d'installer sur le second Mac (DESIGN, question ouverte) |
+| Mode sombre de macOS | Le panneau suit l'apparence du système : le verre s'assombrit seul, la page change ses couleurs (`data-theme` posé par `panneau.js`) |
