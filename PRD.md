@@ -58,7 +58,7 @@ Les lignes marquées **[à confirmer]** sont des propositions de ma part, pas de
 | 5 | Réglages dans le panneau : adresse du bridge, état de la connexion, lancement à l'ouverture de session |
 
 **Ce qu'on ne traite pas.**
-- Pas d'appairage dans l'app. Se connecter demande deux choses : l'adresse du bridge et une clé, que le bridge ne donne qu'après un appui sur son bouton. La clé existe déjà : elle va dans un fichier de réglages hors dépôt. Les réglages montrent l'adresse (modifiable) et l'état de la connexion (demande d'Antho).
+- Pas d'appairage dans l'app. Se connecter demande deux choses : l'adresse du bridge et une clé, que le bridge ne donne qu'après un appui sur son bouton. La clé existe déjà : elle va dans un fichier de réglages hors dépôt. Les réglages montrent l'adresse (modifiable) et l'état de la connexion (demande d'Antho). **Depuis le 12/11** : une commande d'installation fait l'appairage (appui sur le bouton du bridge), pour que quelqu'un d'autre puisse installer l'app ; toujours pas d'écran d'appairage dans le panneau.
 - Pas de création ni de modification de scène : ça reste dans l'app Hue.
 - Pas d'automatisation, d'horaires, de capteurs.
 - Pas d'effets (bougie, scènes dynamiques) pour le moment (Antho, 12/11).

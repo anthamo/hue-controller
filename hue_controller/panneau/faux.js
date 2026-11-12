@@ -42,6 +42,7 @@
       return repondreReglages();
     }
     if (message.action === "quitter") { console.log("quitter"); return; }
+    if (message.action === "auteur") { window.open("https://github.com/anthamo", "_blank"); return; }
     if (message.action === "scene") {
       if (!etat.scenes.some(s => s.id === message.id)) return;
       etat.scenes.forEach(s => { s.active = s.id === message.id; });

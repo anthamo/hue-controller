@@ -1,48 +1,83 @@
 # Hue Controller
 
-Les lumières d'une pièce Philips Hue dans la barre de menus du Mac : une ampoule à côté de l'horloge, un panneau en verre dessous, les scènes et les lampes de la pièce à un clic.
+Les lumières d'une pièce Philips Hue dans la barre de menus du Mac.
 
-Projet personnel, fait pour une maison et un bridge précis (une seule pièce, pas d'appairage dans l'app). Il est publié tel quel, avec ses documents de travail : le problème, la direction visuelle, l'architecture, le plan. Non affilié à Philips Hue ni à Signify.
+Une ampoule à côté de l'horloge. Un clic ouvre un panneau : les scènes de la pièce, l'intensité, chaque lampe avec sa luminosité, sa couleur et sa température de blanc. Pas besoin de chercher son téléphone.
 
-Écrit en Python (PyObjC pour la barre de menus, une page HTML pour le panneau), sans Swift. Demande macOS et [uv](https://docs.astral.sh/uv/).
+Application créée par [Anthony Hamo](https://github.com/anthamo). Projet personnel, non affilié à Philips Hue ni à Signify.
 
-- `PRD.md` : le problème, la solution, ce qu'on ne traite pas.
-- `DESIGN.md` : la direction visuelle (Natif) et ses règles ; maquette dans `design/maquette.html`.
-- `ARCHITECTURE.md` : les fichiers, le contrat entre la page et Python, les décisions.
-- `PLAN.md` : les tranches et les tâches.
+## Ce qu'elle fait
 
-## Lancer
+- **Scènes** : toutes les scènes de la pièce, en un clic, avec la scène en cours en tête.
+- **Pièce** : tout allumer, tout éteindre, régler l'intensité.
+- **Lampes** : rangées par zone. Pour chacune : allumer, éteindre, luminosité, couleur sur une roue chromatique, température du blanc. « Tout éteindre » par zone.
+- **Réglages** : adresse du bridge, lancement à l'ouverture de session, quitter.
+- Suit le mode clair ou sombre du Mac et sa couleur d'accent.
 
-`./installer.sh` crée « Hue Controller » dans `~/Applications` (on peut ensuite le déplacer dans le dossier Applications du Mac : il pointe vers le dossier du projet, où qu'il soit rangé) : l'app s'ouvre ensuite depuis Spotlight ou le Launchpad, comme une autre. À la main :
+Elle pilote **une seule pièce**, choisie à l'installation.
 
-    uv run python -m hue_controller            # l'icône apparaît dans la barre ; Ctrl-C pour arrêter
-    uv run python -m hue_controller --essai    # ouvre le panneau, dit si tout répond, s'arrête
+## Ce qu'il faut
 
-## Réglages
+- Un Mac sous macOS 26 (le panneau en verre vient de cette version ; sur une version plus ancienne, un repli existe mais n'a jamais été essayé).
+- Un bridge Philips Hue sur le même réseau que le Mac.
+- [uv](https://docs.astral.sh/uv/), l'outil qui installe Python et ses bibliothèques.
 
-L'adresse du bridge et sa clé sont dans `~/Library/Application Support/hue-controller/reglages.json`, hors du dépôt.
-Pour les créer à partir du `.env` du téléphone (les valeurs ne sont pas affichées) :
+## Installer
 
-    uv run python -m hue_controller.reglages --depuis ../telephone-s63/.env
+```sh
+git clone https://github.com/anthamo/hue-controller.git
+cd hue-controller
+./installer.sh
+```
 
-Dans le panneau, la roue dentée ouvre les réglages : adresse du bridge, lancement à l'ouverture de session, Quitter.
+Le script fait quatre choses :
 
-## Installer sur un autre Mac
+1. il prépare l'environnement Python ;
+2. il connecte l'app au bridge : il le cherche sur le réseau, demande d'**appuyer sur le gros bouton du bridge**, puis fait choisir la pièce ;
+3. il crée « Hue Controller » dans le dossier Applications et active le lancement à l'ouverture de session ;
+4. il ouvre l'app.
 
-1. Installer `uv` (https://docs.astral.sh/uv/).
-2. Copier ce dossier sur le Mac.
-3. Copier `reglages.json` au même endroit que sur le premier Mac (il contient la clé du bridge : ne pas l'envoyer par un canal public).
-4. Lancer `./installer.sh` : il prépare l'environnement, active le lancement à l'ouverture de session et lance l'app.
+L'ampoule apparaît dans la barre de menus. Ensuite, l'app s'ouvre comme une autre : « Hue Controller » dans Spotlight ou le Launchpad.
 
-Non essayé sur un autre Mac. Le fond en verre du panneau n'existe que sur macOS 26 ; sur une version d'avant, l'app
-se rabat sur le flou classique, jamais essayé non plus.
+**Installer avec Claude.** Le fichier [INSTALLER_AVEC_CLAUDE.md](INSTALLER_AVEC_CLAUDE.md) contient une consigne à coller dans Claude Code : il fait l'installation pas à pas et vérifie que tout marche.
 
-## Travailler sans toucher aux lampes
+## En cas de souci
 
-    open hue_controller/panneau/index.html     # la page sur un faux bridge
-    uv run python -m unittest                  # les tests, sans réseau
-    PYTHONPATH=. uv run python outils/faux_etat.py   # refaire l'état du faux bridge
+| Symptôme | Quoi faire |
+| --- | --- |
+| « Aucun bridge trouvé » | Relancer la connexion avec l'adresse du bridge (elle est dans l'app Hue : Réglages → Mes bridges) : `uv run python -m hue_controller.appairage --adresse 192.168.x.x` |
+| « Le bouton du bridge n'a pas été appuyé à temps » | Relancer `./installer.sh` et appuyer sur le bouton dans les 30 secondes |
+| « Le bridge ne répond pas » dans le panneau | Le bridge a peut-être changé d'adresse : la corriger dans les réglages du panneau (la roue dentée) |
+| Changer de pièce, ou repartir de zéro | Supprimer `~/Library/Application Support/hue-controller/reglages.json`, puis relancer `./installer.sh` |
+| L'app ne s'ouvre plus après avoir déplacé son dossier | Relancer `./installer.sh` depuis le nouvel emplacement |
 
-## État
+## Désinstaller
 
-Les cinq tranches du plan sont écrites (12/11/2026). Ce qui reste est dans `PLAN.md` et dans les questions ouvertes de `DESIGN.md`.
+Dans le panneau, roue dentée : couper « Lancer à l'ouverture de session », puis « Quitter ». Supprimer ensuite « Hue Controller » du dossier Applications, le dossier du projet, et `~/Library/Application Support/hue-controller`.
+
+## Où sont les réglages
+
+L'adresse du bridge, sa clé et le nom de la pièce sont dans `~/Library/Application Support/hue-controller/reglages.json`, hors du dossier du projet, lisibles par le seul utilisateur. La clé donne le contrôle des lampes : ne pas la partager.
+
+Pour chercher le bridge, l'installation interroge une fois l'annuaire de Philips Hue (`discovery.meethue.com`). Ensuite, tout reste sur le réseau de la maison.
+
+## Pour qui veut lire ou modifier le code
+
+L'app est en Python : PyObjC pour la barre de menus et la fenêtre, une page HTML pour l'intérieur du panneau. Pas de Swift.
+
+```sh
+uv run python -m hue_controller            # lancer depuis le dossier du projet ; Ctrl-C pour arrêter
+uv run python -m hue_controller --essai    # ouvre le panneau, dit si tout répond, s'arrête
+uv run python -m hue_controller --journal  # écrit chaque ordre envoyé au bridge, avec sa durée
+uv run python -m unittest                  # les tests, sans réseau
+open hue_controller/panneau/index.html     # la page seule, sur un faux bridge : rien n'est envoyé aux lampes
+```
+
+Les documents de travail racontent comment le projet a été pensé et construit :
+
+- [PRD.md](PRD.md) : le problème, la solution, ce qu'on ne traite pas ;
+- [DESIGN.md](DESIGN.md) : la direction visuelle et ses règles ; la maquette est dans `design/maquette.html` ;
+- [ARCHITECTURE.md](ARCHITECTURE.md) : les fichiers, le contrat entre la page et Python, les décisions ;
+- [PLAN.md](PLAN.md) : le découpage en tranches et en tâches.
+
+Limites connues : une seule pièce ; pas de création de scène ; pas d'effets ; la roue chromatique ne se règle pas au clavier ; installation jamais essayée sur un second Mac.

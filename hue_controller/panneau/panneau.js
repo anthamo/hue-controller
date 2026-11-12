@@ -102,7 +102,7 @@ function creerSqueletteSiBesoin() {
       </div>
       <div class="bloc ligne"><span>Lancer à l'ouverture de session</span><button class="inter" role="switch" aria-checked="false" aria-label="Lancer à l'ouverture de session" data-demarrage></button></div>
       <button type="button" class="quitter">Quitter Hue Controller</button>
-      <div class="bas"><span class="auteur">Application créée par Anthony Hamo</span><button type="button" class="termine">Terminé</button></div>
+      <div class="bas"><button type="button" class="auteur">Application créée par Anthony Hamo</button><button type="button" class="termine">Terminé</button></div>
     </div>`;
   preparerReglages();
   groupe = racine.querySelector(".groupe");
@@ -474,6 +474,7 @@ racine.addEventListener("click", e => {
       envoyer({ action: "demarrage", on });
     } else if (b.classList.contains("quitter")) envoyer({ action: "quitter" });
     else if (b.classList.contains("termine")) basculerReglages(false);
+    else if (b.classList.contains("auteur")) envoyer({ action: "auteur" });  // l'app ouvre la page GitHub dans le navigateur
     return;
   }
   if (!etat || etat.connexion !== "ok") return;

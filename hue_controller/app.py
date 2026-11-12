@@ -32,6 +32,7 @@ from AppKit import (
     NSVisualEffectView,
     NSWindowStyleMaskBorderless,
     NSWindowStyleMaskNonactivatingPanel,
+    NSWorkspace,
 )
 from Foundation import NSJSONSerialization, NSURL
 from PyObjCTools import AppHelper
@@ -45,6 +46,7 @@ DOSSIER_PAGE = Path(__file__).parent / "panneau"
 LARGEUR, HAUTEUR = 360, 600
 DELAI_APRES_ORDRE = 0.6  # le bridge met un instant à refléter l'ordre
 DELAI_SECONDE_LECTURE = 1.4  # puis une seconde relecture : la première tombe quand la page ignore encore l'état
+PAGE_AUTEUR = "https://github.com/anthamo"  # ouverte par la signature des réglages
 MARGE = 32  # la fenêtre dépasse le panneau de cette marge, pour que son ombre ait la place de s'éteindre
 RAYON = 20  # coins du panneau, comme ceux des panneaux de la barre de menus du système
 ECART = 6  # entre la barre de menus et le panneau
@@ -325,7 +327,7 @@ class App(NSObject):
             self.donner_accent()
             self.pousser(self.dernier_etat())
             return
-        if isinstance(message, dict) and message.get("action") in ("reglages", "demarrage", "quitter"):
+        if isinstance(message, dict) and message.get("action") in ("reglages", "demarrage", "quitter", "auteur"):
             self.message_reglages(message)
             return
         if not self.travail:
@@ -341,6 +343,10 @@ class App(NSObject):
     def message_reglages(self, message):
         action = message["action"]
         erreur = None
+        if action == "auteur":
+            # L'adresse est fixée ici : la page ne peut pas faire ouvrir autre chose.
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(PAGE_AUTEUR))
+            return
         if action == "quitter":
             if self.travail:
                 self.travail.arreter()

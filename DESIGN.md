@@ -61,7 +61,7 @@ De haut en bas, dans l'ordre des gestes :
    - **Bridge** : l'adresse (un champ), l'état de la connexion en une phrase (« Connecté », ou la phrase d'erreur), « Enregistrer » qui n'apparaît que si l'adresse a changé.
    - **Lancer à l'ouverture de session** : un interrupteur.
    - **Quitter Hue Controller** : un bouton, en bas, discret.
-   - En bas à gauche, sur la ligne de « Terminé » : « Application créée par Anthony Hamo », en texte secondaire.
+   - En bas à gauche, sur la ligne de « Terminé » : « Application créée par Anthony Hamo », en texte secondaire ; un clic ouvre sa page GitHub dans le navigateur.
 
 ## Règles
 

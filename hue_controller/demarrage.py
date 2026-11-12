@@ -66,9 +66,12 @@ APP_COMMUNE = Path("/Applications/Hue Controller.app")
 
 
 def emplacement_app():
-    """Où est le lanceur : dans le dossier Applications du Mac si on l'y a déplacé (Antho l'a fait le 12/11/2026),
-    sinon dans celui du compte, où il est créé."""
-    return APP_COMMUNE if APP_COMMUNE.exists() else APP
+    """Où ranger le lanceur : s'il existe déjà, là où il est ; sinon dans le dossier Applications du Mac s'il est
+    ouvert en écriture (c'est là qu'on cherche une app), à défaut dans celui du compte."""
+    for app in (APP_COMMUNE, APP):
+        if app.exists():
+            return app
+    return APP_COMMUNE if os.access(APP_COMMUNE.parent, os.W_OK) else APP
 
 
 def installer_app(app=None, uv=None, dossier=None):
