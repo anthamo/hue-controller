@@ -13,7 +13,7 @@ Projet personnel, fait pour une maison et un bridge précis (une seule pièce, p
 
 ## Lancer
 
-`./installer.sh` crée « Hue Controller » dans `~/Applications` : l'app s'ouvre ensuite depuis Spotlight ou le Launchpad, comme une autre. À la main :
+`./installer.sh` crée « Hue Controller » dans `~/Applications` (on peut ensuite le déplacer dans le dossier Applications du Mac : il pointe vers le dossier du projet, où qu'il soit rangé) : l'app s'ouvre ensuite depuis Spotlight ou le Launchpad, comme une autre. À la main :
 
     uv run python -m hue_controller            # l'icône apparaît dans la barre ; Ctrl-C pour arrêter
     uv run python -m hue_controller --essai    # ouvre le panneau, dit si tout répond, s'arrête

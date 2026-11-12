@@ -34,7 +34,7 @@ echo "3/4  Application dans ~/Applications et lancement à l'ouverture de sessio
 uv run --quiet python -c "from hue_controller import demarrage; demarrage.installer_app(); demarrage.activer()"
 
 echo "4/4  Lancement de l'app…"
-open "$HOME/Applications/Hue Controller.app"
+open "$(uv run --quiet python -c "from hue_controller import demarrage; print(demarrage.emplacement_app())")"
 
 echo "C'est prêt : l'ampoule est dans la barre de menus."
 echo "Pour la rouvrir : « Hue Controller » dans Spotlight ou le Launchpad."

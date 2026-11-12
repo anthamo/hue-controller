@@ -62,6 +62,13 @@ def desactiver(chemin=None):
 # --- Le lanceur : une petite application dans ~/Applications, pour ouvrir l'app depuis Spotlight ou le Launchpad ---
 
 APP = Path("~/Applications/Hue Controller.app").expanduser()
+APP_COMMUNE = Path("/Applications/Hue Controller.app")
+
+
+def emplacement_app():
+    """Où est le lanceur : dans le dossier Applications du Mac si on l'y a déplacé (Antho l'a fait le 12/11/2026),
+    sinon dans celui du compte, où il est créé."""
+    return APP_COMMUNE if APP_COMMUNE.exists() else APP
 
 
 def installer_app(app=None, uv=None, dossier=None):
@@ -69,7 +76,7 @@ def installer_app(app=None, uv=None, dossier=None):
 
     Sans lui, l'app n'existe que comme commande de terminal : Spotlight ne la trouve pas (essayé par Antho le 12/11/2026).
     """
-    app = Path(APP if app is None else app)
+    app = Path(emplacement_app() if app is None else app)
     uv = shutil.which("uv") if uv is None else uv
     if not uv:
         raise RuntimeError("uv est introuvable.")
