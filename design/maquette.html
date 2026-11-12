@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hue Controller · maquette</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 40px 32px 64px; background: #efeeeb; color: #1f1d1b; font: 15px/24px -apple-system, "Helvetica Neue", Arial, sans-serif; }
+  .page { max-width: 1160px; margin: 0 auto; }
+  h1 { font-size: 28px; line-height: 32px; margin: 0 0 8px; font-weight: 650; }
+  .chapo { margin: 0 0 40px; max-width: 720px; color: #4a4642; }
+  .piste { display: grid; grid-template-columns: 300px 1fr; gap: 32px; margin-bottom: 48px; align-items: start; }
+  .piste h2 { font-size: 22px; line-height: 28px; margin: 0 0 4px; font-weight: 650; }
+  .piste .phrase { margin: 0 0 16px; color: #4a4642; }
+  .piste dl { margin: 0; font-size: 13px; line-height: 20px; }
+  .piste dt { font-weight: 650; margin-top: 8px; }
+  .piste dd { margin: 0; color: #4a4642; }
+  .scene-mur { display: flex; gap: 24px; padding: 32px; border-radius: 16px; justify-content: center; align-items: flex-start;
+    background: linear-gradient(160deg, #8fa3b8 0%, #5d6f86 45%, #3b4658 100%); }
+  .vue { display: flex; flex-direction: column; gap: 8px; }
+  .vue > span { font-size: 13px; line-height: 16px; color: rgba(255,255,255,.85); }
+
+  /* ---------- Le panneau : structure commune ---------- */
+  .panneau { width: 360px; border-radius: 16px; overflow: hidden; position: relative; font-size: 13px; line-height: 16px;
+    background: var(--fond); color: var(--texte); border: 1px solid var(--bord); box-shadow: 0 16px 40px rgba(0,0,0,.28); font-family: var(--police); }
+  .entete { display: flex; align-items: center; gap: 12px; padding: 16px 12px 8px; }
+  .entete .noms { flex: 1; min-width: 0; }
+  .entete .piece { font-size: 16px; line-height: 20px; font-weight: 650; }
+  .entete .etat { font-size: 12px; line-height: 16px; color: var(--second); }
+  .groupe { display: flex; align-items: center; gap: 12px; padding: 4px 12px 12px; }
+  .groupe output { width: 44px; white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; color: var(--second); font-size: 12px; }
+  .onglets { display: flex; margin: 0 12px 12px; padding: 2px; border-radius: 8px; background: var(--creux); }
+  .onglets button { flex: 1; height: 24px; border: 0; border-radius: 6px; background: none; color: var(--second); font: inherit; cursor: pointer; }
+  .onglets button[aria-selected="true"] { background: var(--releve); color: var(--texte); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+  .corps { height: 456px; overflow-y: auto; padding: 0 12px 12px; }
+  .pied { padding: 8px 12px; border-top: 1px solid var(--bord); font-size: 12px; color: var(--second); }
+  .pied button { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+
+  /* Interrupteur */
+  .inter { flex: none; width: 36px; height: 20px; border-radius: 10px; border: 0; padding: 2px; background: var(--inter-off); cursor: pointer; }
+  .inter::after { content: ""; display: block; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); transition: transform .12s; }
+  .inter[aria-checked="true"] { background: var(--inter-on); }
+  .inter[aria-checked="true"]::after { transform: translateX(16px); }
+
+  /* Curseur : une seule forme pour l'intensité, le blanc et la couleur. La poignée prend la couleur qu'elle règle. */
+  input[type=range] { -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; width: 100%; height: 16px; margin: 0; background: transparent; cursor: pointer; }
+  input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--inter-on) var(--v, 50%), var(--piste) var(--v, 50%)); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 16px; margin-top: -6px; border-radius: 8px; background: var(--pouce, #fff); border: 3px solid #fff; box-shadow: 0 0 0 .5px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.22); }
+  input[type=range].intensite::-webkit-slider-runnable-track { background: linear-gradient(to right, color-mix(in srgb, var(--c, var(--piste)) 30%, transparent) 0, var(--c, var(--piste)) var(--v, 50%), var(--piste) var(--v, 50%)); }
+  input[type=range].blanc::-webkit-slider-runnable-track { box-shadow: 0 0 0 1px var(--bord-fort); background: linear-gradient(to right, #ffb36b, #fff3e2 55%, #dbe7ff); }
+  input[type=range].teinte::-webkit-slider-runnable-track { background: linear-gradient(to right, hsl(0 100% 62%), hsl(45 100% 62%), hsl(90 100% 62%), hsl(135 100% 62%), hsl(180 100% 62%), hsl(225 100% 62%), hsl(270 100% 62%), hsl(315 100% 62%), hsl(360 100% 62%)); }
+  input[type=range]:disabled { opacity: .3; cursor: default; }
+
+  /* Ambiances : tuiles sur deux colonnes, l'échantillon de la scène à gauche du nom */
+  .scenes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .scene { display: flex; align-items: center; gap: 8px; height: 44px; padding: 4px 8px 4px 4px; border-radius: 6px; border: 0; background: var(--tuile); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+  .scene i { flex: none; width: 36px; height: 36px; border-radius: 4px; background: var(--g); opacity: calc(.5 + var(--o) / 2); }
+  .scene span { font-size: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .scene[aria-pressed="true"] { background: var(--releve); box-shadow: inset 0 0 0 2px var(--inter-on); }
+
+  /* Lampes : rangées par zone ; une ligne = nom (qui déplie), intensité, interrupteur */
+  .zone { font-size: 14px; line-height: 20px; font-weight: 650; margin: 12px 0 4px; }
+  .zone:first-child { margin-top: 0; }
+  .lampe { display: grid; grid-template-columns: 164px 1fr 36px; align-items: center; column-gap: 8px; height: 32px; }
+  .lampe .nom { display: flex; align-items: center; gap: 8px; min-width: 0; height: 28px; margin-left: -4px; padding: 0 4px; border: 0; border-radius: 6px; background: none; color: inherit; font: inherit; text-align: left; }
+  .lampe button.nom { cursor: pointer; }
+  .lampe button.nom:hover, .bloc.ouvert button.nom { background: var(--creux); }
+  .lampe .pastille { flex: none; width: 12px; height: 12px; border-radius: 50%; background: var(--c, transparent); box-shadow: inset 0 0 0 1px var(--bord-fort); }
+  .lampe .nom span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lampe .nom svg { flex: none; width: 8px; height: 8px; color: var(--second); transition: transform .12s; }
+  .bloc.ouvert .nom svg { transform: rotate(90deg); }
+  .bloc.eteinte .nom span { color: var(--second); }
+  .depli { margin: 4px 0 8px; padding: 8px 12px; border-radius: 6px; background: var(--creux); }
+  .reglage { display: grid; grid-template-columns: 52px 1fr; align-items: center; column-gap: 12px; height: 32px; }
+  .reglage span { color: var(--second); }
+
+  /* ---------- Natif ---------- */
+  .natif { --police: -apple-system, "Helvetica Neue", sans-serif; --fond: rgba(244,244,246,.82); --texte: #1d1d1f; --second: #5c5c61; --bord: rgba(0,0,0,.1); --bord-fort: rgba(0,0,0,.25);
+    --creux: rgba(0,0,0,.07); --releve: #fff; --tuile: rgba(255,255,255,.62); --inter-off: rgba(0,0,0,.18); --inter-on: #34c759; --plein: #1d1d1f; --piste: rgba(0,0,0,.14);
+    -webkit-backdrop-filter: blur(32px) saturate(1.6); backdrop-filter: blur(32px) saturate(1.6); }
+
+  @media (max-width: 1100px) { .piste { grid-template-columns: 1fr; } .scene-mur { flex-wrap: wrap; } }
+</style>
+
+<div class="page">
+  <h1>Hue Controller · maquette de référence</h1>
+  <p class="chapo">Direction Natif, retenue par Antho le 12/11/2026. Données réelles du Séjour ; tout se clique, rien n'est envoyé aux lampes. Les règles sont dans DESIGN.md.</p>
+  <div id="pistes"></div>
+</div>
+
+<script>
+const DONNEES = {"scenes": [{"nom": "Honolulu", "acts": [{"l": "Bibliothèque gauche", "on": true, "b": 39.13, "c": "#ff735d", "k": null}, {"l": "Bibliothèque droite", "on": true, "b": 39.13, "c": "#ff864a", "k": null}, {"l": "Musique gauche", "on": true, "b": 39.13, "c": "#ff9935", "k": null}, {"l": "Salle à manger - plafond", "on": true, "b": 39.13, "c": "#ffce5f", "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 39.13, "c": "#ff3d4b", "k": null}, {"l": "Plafond salon", "on": true, "b": 39.13, "c": "#ff735d", "k": null}, {"l": "Buffet gauche", "on": true, "b": 39.13, "c": "#ff864a", "k": null}, {"l": "Plafond cuisine", "on": false, "b": null, "c": null, "k": null}, {"l": "Buffet droite", "on": true, "b": 39.13, "c": "#ff9935", "k": null}, {"l": "Vinyles", "on": true, "b": 39.0, "c": "#ff735d", "k": null}, {"l": "Musique Droite", "on": true, "b": 39.0, "c": "#ffce5f", "k": null}]}, {"nom": "Matin", "acts": [{"l": "Musique gauche", "on": true, "b": 9.88, "c": "#ffa026", "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 22.13, "c": "#ff993a", "k": 2375}, {"l": "Plafond salon", "on": true, "b": 30.04, "c": "#ff932a", "k": 2232}, {"l": "Plafond cuisine", "on": false, "b": null, "c": null, "k": null}, {"l": "Bibliothèque droite", "on": true, "b": 27.27, "c": "#ffa026", "k": null}, {"l": "Buffet gauche", "on": true, "b": 61.26, "c": "#ffde93", "k": null}, {"l": "Bibliothèque gauche", "on": true, "b": 69.57, "c": "#ffde93", "k": null}, {"l": "Buffet droite", "on": true, "b": 9.88, "c": "#ffa026", "k": null}, {"l": "Salle à manger - plafond", "on": true, "b": 9.88, "c": "#ffa026", "k": null}, {"l": "Vinyles", "on": true, "b": 9.88, "c": "#ffa026", "k": null}, {"l": "Musique Droite", "on": true, "b": 61.26, "c": "#ffde93", "k": null}]}, {"nom": "Sunset allure 2", "acts": [{"l": "Bibliothèque gauche", "on": true, "b": 58.89, "c": "#bd89ff", "k": null}, {"l": "Bibliothèque droite", "on": true, "b": 88.93, "c": "#ffc9ae", "k": null}, {"l": "Musique gauche", "on": true, "b": 88.93, "c": "#ffc9ae", "k": null}, {"l": "Salle à manger - plafond", "on": false, "b": null, "c": null, "k": null}, {"l": "Musique Droite", "on": true, "b": 58.89, "c": "#ffb485", "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 58.89, "c": "#ff7849", "k": null}, {"l": "Vinyles", "on": true, "b": 88.93, "c": null, "k": null}, {"l": "Plafond salon", "on": true, "b": 58.89, "c": "#ffcab1", "k": null}, {"l": "Buffet gauche", "on": true, "b": 58.89, "c": "#977aff", "k": null}, {"l": "Plafond cuisine", "on": false, "b": null, "c": null, "k": null}, {"l": "Buffet droite", "on": true, "b": 58.89, "c": "#977aff", "k": null}]}, {"nom": "Repas", "acts": [{"l": "Bibliothèque gauche", "on": true, "b": 84.19, "c": null, "k": null}, {"l": "Bibliothèque droite", "on": true, "b": 84.19, "c": null, "k": null}, {"l": "Musique gauche", "on": true, "b": 52.17, "c": "#ff890f", "k": 2012}, {"l": "Salle à manger - plafond", "on": true, "b": 100.0, "c": "#ffd577", "k": null}, {"l": "Hue color lamp 1", "on": false, "b": null, "c": null, "k": null}, {"l": "Plafond salon", "on": false, "b": null, "c": null, "k": null}, {"l": "Buffet gauche", "on": true, "b": 84.19, "c": null, "k": null}, {"l": "Plafond cuisine", "on": true, "b": 59.68, "c": null, "k": null}, {"l": "Buffet droite", "on": true, "b": 84.19, "c": null, "k": null}, {"l": "Vinyles", "on": true, "b": 100.0, "c": "#ffd577", "k": null}, {"l": "Musique Droite", "on": true, "b": 100.0, "c": "#ffd577", "k": null}]}, {"nom": "Veilleuse", "acts": [{"l": "Musique gauche", "on": true, "b": 10.0, "c": "#ffa026", "k": null}, {"l": "Plafond cuisine", "on": false, "b": null, "c": null, "k": null}, {"l": "Bibliothèque gauche", "on": true, "b": 10.0, "c": "#ffa026", "k": null}, {"l": "Buffet gauche", "on": true, "b": 10.0, "c": "#ffa026", "k": null}, {"l": "Bibliothèque droite", "on": true, "b": 10.0, "c": "#ffa026", "k": null}, {"l": "Hue color lamp 1", "on": false, "b": null, "c": null, "k": null}, {"l": "Plafond salon", "on": false, "b": null, "c": null, "k": null}, {"l": "Buffet droite", "on": true, "b": 0.0, "c": "#ffa026", "k": null}, {"l": "Salle à manger - plafond", "on": true, "b": 0.0, "c": "#ffa026", "k": null}, {"l": "Vinyles", "on": true, "b": 0.0, "c": "#ffa026", "k": null}, {"l": "Musique Droite", "on": true, "b": 0.0, "c": "#ffa026", "k": null}]}, {"nom": "Collines vallonnées", "acts": [{"l": "Bibliothèque gauche", "on": true, "b": 45.06, "c": "#ffae4d", "k": null}, {"l": "Bibliothèque droite", "on": true, "b": 45.06, "c": "#ff8e33", "k": null}, {"l": "Musique gauche", "on": true, "b": 45.06, "c": "#ff8e33", "k": null}, {"l": "Salle à manger - plafond", "on": true, "b": 45.06, "c": "#ffb75f", "k": null}, {"l": "Musique Droite", "on": true, "b": 45.06, "c": "#ff9f3c", "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 45.06, "c": "#ffae4d", "k": null}, {"l": "Vinyles", "on": true, "b": 45.06, "c": "#ffbe71", "k": null}, {"l": "Plafond salon", "on": true, "b": 45.06, "c": "#ffb75f", "k": null}, {"l": "Buffet gauche", "on": true, "b": 45.06, "c": "#ff9f3c", "k": null}, {"l": "Plafond cuisine", "on": true, "b": 45.06, "c": null, "k": null}, {"l": "Buffet droite", "on": true, "b": 45.06, "c": "#ffbe71", "k": null}]}, {"nom": "Éclosion ambrée", "acts": [{"l": "Bibliothèque gauche", "on": true, "b": 80.0, "c": "#ff9a20", "k": null}, {"l": "Bibliothèque droite", "on": true, "b": 80.0, "c": "#ff891b", "k": null}, {"l": "Musique gauche", "on": true, "b": 80.0, "c": "#ff6a35", "k": null}, {"l": "Salle à manger - plafond", "on": true, "b": 80.0, "c": "#ffa849", "k": null}, {"l": "Musique Droite", "on": true, "b": 80.0, "c": "#ff6a35", "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 80.0, "c": "#ff891b", "k": null}, {"l": "Vinyles", "on": true, "b": 80.0, "c": "#ffab78", "k": null}, {"l": "Plafond salon", "on": true, "b": 80.0, "c": "#ffa849", "k": null}, {"l": "Buffet gauche", "on": true, "b": 80.0, "c": "#ff9a20", "k": null}, {"l": "Plafond cuisine", "on": true, "b": 80.0, "c": null, "k": null}, {"l": "Buffet droite", "on": true, "b": 80.0, "c": "#ffab78", "k": null}]}, {"nom": "Cosy baby", "acts": [{"l": "Salle à manger - plafond", "on": false, "b": null, "c": null, "k": null}, {"l": "Bibliothèque gauche", "on": true, "b": 60.47, "c": null, "k": null}, {"l": "Bibliothèque droite", "on": true, "b": 44.27, "c": "#ff925c", "k": null}, {"l": "Musique gauche", "on": true, "b": 37.15, "c": "#ff8a30", "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 40.32, "c": "#ff8a30", "k": null}, {"l": "Plafond salon", "on": true, "b": 45.06, "c": "#ff8b31", "k": null}, {"l": "Buffet gauche", "on": true, "b": 60.47, "c": null, "k": null}, {"l": "Plafond cuisine", "on": false, "b": null, "c": null, "k": null}, {"l": "Buffet droite", "on": true, "b": 100.0, "c": "#ff8930", "k": null}, {"l": "Vinyles", "on": true, "b": 100.0, "c": "#ff8930", "k": null}, {"l": "Musique Droite", "on": true, "b": 100.0, "c": "#ff925c", "k": null}]}, {"nom": "Coucher de soleil sur la savane", "acts": [{"l": "Bibliothèque gauche", "on": true, "b": 49.8, "c": "#ffcd59", "k": null}, {"l": "Bibliothèque droite", "on": true, "b": 49.8, "c": "#ffa659", "k": null}, {"l": "Musique gauche", "on": true, "b": 49.8, "c": "#ff8041", "k": null}, {"l": "Salle à manger - plafond", "on": true, "b": 58.0, "c": "#ff5b21", "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 49.8, "c": "#ffef87", "k": null}, {"l": "Plafond salon", "on": true, "b": 49.8, "c": "#ff8041", "k": null}, {"l": "Buffet gauche", "on": true, "b": 49.8, "c": "#ff5b21", "k": null}, {"l": "Plafond cuisine", "on": false, "b": null, "c": null, "k": null}, {"l": "Buffet droite", "on": true, "b": 58.0, "c": "#ffef87", "k": null}, {"l": "Vinyles", "on": true, "b": 58.0, "c": "#ff8041", "k": null}, {"l": "Musique Droite", "on": true, "b": 58.0, "c": "#ff5b21", "k": null}]}, {"nom": "Stimulation", "acts": [{"l": "Musique gauche", "on": true, "b": 100.0, "c": "#fffcf7", "k": 6410}, {"l": "Plafond salon", "on": true, "b": 100.0, "c": "#fffcf7", "k": 6410}, {"l": "Plafond cuisine", "on": true, "b": 100.0, "c": null, "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 100.0, "c": "#fffcf7", "k": 6410}, {"l": "Buffet gauche", "on": true, "b": 100.0, "c": "#fffcf7", "k": 6410}, {"l": "Bibliothèque droite", "on": true, "b": 100.0, "c": "#fffcf7", "k": 6410}, {"l": "Bibliothèque gauche", "on": true, "b": 100.0, "c": "#fffcf7", "k": 6410}, {"l": "Buffet droite", "on": true, "b": 100.0, "c": "#fffcf7", "k": 6410}, {"l": "Salle à manger - plafond", "on": true, "b": 100.0, "c": "#fffcf7", "k": 6410}, {"l": "Vinyles", "on": true, "b": 100.0, "c": "#fffcf7", "k": 6410}, {"l": "Musique Droite", "on": true, "b": 100.0, "c": "#fffcf7", "k": 6410}]}, {"nom": "Rio", "acts": [{"l": "Musique gauche", "on": true, "b": 80.0, "c": "#ff6b83", "k": null}, {"l": "Plafond cuisine", "on": true, "b": 80.0, "c": null, "k": null}, {"l": "Bibliothèque gauche", "on": true, "b": 80.0, "c": "#ff4f83", "k": null}, {"l": "Buffet gauche", "on": true, "b": 80.0, "c": "#ffdb50", "k": null}, {"l": "Bibliothèque droite", "on": true, "b": 80.0, "c": "#ff4f83", "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 80.0, "c": "#ff9752", "k": null}, {"l": "Plafond salon", "on": true, "b": 80.0, "c": "#a34fff", "k": null}, {"l": "Buffet droite", "on": true, "b": 100.0, "c": "#a24fff", "k": null}, {"l": "Salle à manger - plafond", "on": true, "b": 80.0, "c": "#ff9752", "k": null}, {"l": "Vinyles", "on": true, "b": 100.0, "c": "#a24fff", "k": null}, {"l": "Musique Droite", "on": true, "b": 100.0, "c": "#a24fff", "k": null}]}, {"nom": "Lumineux", "acts": [{"l": "Buffet droite", "on": true, "b": 100.0, "c": "#ffa657", "k": 2703}, {"l": "Musique gauche", "on": true, "b": 100.0, "c": "#ffa657", "k": 2703}, {"l": "Plafond salon", "on": true, "b": 100.0, "c": "#ffa657", "k": 2703}, {"l": "Plafond cuisine", "on": true, "b": 100.0, "c": null, "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 100.0, "c": "#ffa657", "k": 2703}, {"l": "Buffet gauche", "on": true, "b": 100.0, "c": "#ffa657", "k": 2703}, {"l": "Bibliothèque droite", "on": true, "b": 100.0, "c": "#ffa657", "k": 2703}, {"l": "Bibliothèque gauche", "on": true, "b": 100.0, "c": "#ffa657", "k": 2703}, {"l": "Salle à manger - plafond", "on": true, "b": 100.0, "c": "#ffa657", "k": 2703}, {"l": "Vinyles", "on": true, "b": 100.0, "c": "#ffa657", "k": 2703}, {"l": "Musique Droite", "on": true, "b": 100.0, "c": "#ffa657", "k": 2703}]}, {"nom": "Soho", "acts": [{"l": "Bibliothèque gauche", "on": true, "b": 62.0, "c": "#ff6f9a", "k": null}, {"l": "Bibliothèque droite", "on": true, "b": 62.0, "c": "#8314ff", "k": null}, {"l": "Musique gauche", "on": true, "b": 62.0, "c": "#ff2778", "k": null}, {"l": "Salle à manger - plafond", "on": true, "b": 62.0, "c": "#ffa06f", "k": null}, {"l": "Musique Droite", "on": true, "b": 62.0, "c": "#ff2778", "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 62.0, "c": "#ff6f9a", "k": null}, {"l": "Vinyles", "on": true, "b": 62.0, "c": "#67ffdb", "k": null}, {"l": "Plafond salon", "on": true, "b": 62.0, "c": "#ffa06f", "k": null}, {"l": "Buffet gauche", "on": true, "b": 62.0, "c": "#67ffdb", "k": null}, {"l": "Plafond cuisine", "on": true, "b": 62.0, "c": null, "k": null}, {"l": "Buffet droite", "on": true, "b": 62.0, "c": "#8314ff", "k": null}]}, {"nom": "Étreinte chaleureuse", "acts": [{"l": "Bibliothèque gauche", "on": true, "b": 39.92, "c": "#ff9a4b", "k": null}, {"l": "Bibliothèque droite", "on": true, "b": 39.92, "c": "#ff794f", "k": null}, {"l": "Musique gauche", "on": true, "b": 39.92, "c": "#ff735e", "k": null}, {"l": "Salle à manger - plafond", "on": true, "b": 39.92, "c": "#ff9a4b", "k": null}, {"l": "Musique Droite", "on": true, "b": 39.92, "c": "#ff735e", "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 39.92, "c": "#ffab50", "k": null}, {"l": "Vinyles", "on": true, "b": 39.92, "c": "#ff8c47", "k": null}, {"l": "Plafond salon", "on": true, "b": 39.92, "c": "#ffab50", "k": null}, {"l": "Buffet gauche", "on": true, "b": 39.92, "c": "#ff794f", "k": null}, {"l": "Plafond cuisine", "on": true, "b": 39.92, "c": null, "k": null}, {"l": "Buffet droite", "on": true, "b": 39.92, "c": "#ff8c47", "k": null}]}, {"nom": "Crépuscule rêveur", "acts": [{"l": "Bibliothèque droite", "on": true, "b": 50.0, "c": "#ff9553", "k": null}, {"l": "Bibliothèque gauche", "on": true, "b": 50.0, "c": "#ffab59", "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 50.0, "c": "#ff7c65", "k": null}, {"l": "Plafond salon", "on": true, "b": 50.0, "c": "#ffab59", "k": null}, {"l": "Plafond cuisine", "on": true, "b": 50.0, "c": null, "k": null}, {"l": "Musique gauche", "on": true, "b": 50.0, "c": "#ff93b8", "k": null}, {"l": "Musique Droite", "on": true, "b": 50.0, "c": "#ff93b8", "k": null}, {"l": "Buffet gauche", "on": true, "b": 50.0, "c": "#ff7e94", "k": null}, {"l": "Buffet droite", "on": true, "b": 50.0, "c": "#ff7c65", "k": null}, {"l": "Salle à manger - plafond", "on": true, "b": 50.0, "c": "#ff9553", "k": null}, {"l": "Vinyles", "on": true, "b": 50.0, "c": "#ff7e94", "k": null}]}, {"nom": "Rio 2", "acts": [{"l": "Bibliothèque gauche", "on": true, "b": 79.84, "c": "#a34fff", "k": null}, {"l": "Bibliothèque droite", "on": true, "b": 79.84, "c": "#ff6b83", "k": null}, {"l": "Musique gauche", "on": true, "b": 79.84, "c": "#a34fff", "k": null}, {"l": "Salle à manger - plafond", "on": true, "b": 79.84, "c": "#ffdb50", "k": null}, {"l": "Musique Droite", "on": true, "b": 79.84, "c": "#ff9752", "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 79.84, "c": "#ff6b83", "k": null}, {"l": "Vinyles", "on": true, "b": 79.84, "c": "#ff4f83", "k": null}, {"l": "Plafond salon", "on": true, "b": 79.84, "c": "#ffdb50", "k": null}, {"l": "Buffet gauche", "on": true, "b": 79.84, "c": "#ff9752", "k": null}, {"l": "Plafond cuisine", "on": true, "b": 79.84, "c": null, "k": null}, {"l": "Buffet droite", "on": true, "b": 79.84, "c": "#ff4f83", "k": null}]}, {"nom": "Détente", "acts": [{"l": "Musique gauche", "on": true, "b": 56.25, "c": "#ff942b", "k": 2237}, {"l": "Plafond salon", "on": true, "b": 56.25, "c": "#ff942b", "k": 2237}, {"l": "Plafond cuisine", "on": true, "b": 56.25, "c": null, "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 56.25, "c": "#ff942b", "k": 2237}, {"l": "Buffet gauche", "on": true, "b": 56.25, "c": "#ff942b", "k": 2237}, {"l": "Bibliothèque droite", "on": true, "b": 56.25, "c": "#ff942b", "k": 2237}, {"l": "Bibliothèque gauche", "on": true, "b": 56.25, "c": "#ff942b", "k": 2237}, {"l": "Buffet droite", "on": true, "b": 56.25, "c": "#ff942b", "k": 2237}, {"l": "Salle à manger - plafond", "on": true, "b": 56.25, "c": "#ff942b", "k": 2237}, {"l": "Vinyles", "on": true, "b": 56.25, "c": "#ff942b", "k": 2237}, {"l": "Musique Droite", "on": true, "b": 56.25, "c": "#ff942b", "k": 2237}]}, {"nom": "Lecture", "acts": [{"l": "Musique gauche", "on": true, "b": 100.0, "c": "#ffad66", "k": 2890}, {"l": "Plafond salon", "on": true, "b": 100.0, "c": "#ffad66", "k": 2890}, {"l": "Plafond cuisine", "on": true, "b": 100.0, "c": null, "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 100.0, "c": "#ffad66", "k": 2890}, {"l": "Buffet gauche", "on": true, "b": 100.0, "c": "#ffad66", "k": 2890}, {"l": "Bibliothèque droite", "on": true, "b": 100.0, "c": "#ffad66", "k": 2890}, {"l": "Bibliothèque gauche", "on": true, "b": 100.0, "c": "#ffad66", "k": 2890}, {"l": "Buffet droite", "on": true, "b": 100.0, "c": "#ffad66", "k": 2890}, {"l": "Salle à manger - plafond", "on": true, "b": 100.0, "c": "#ffad66", "k": 2890}, {"l": "Vinyles", "on": true, "b": 100.0, "c": "#ffad66", "k": 2890}, {"l": "Musique Droite", "on": true, "b": 100.0, "c": "#ffad66", "k": 2890}]}, {"nom": "Sunset allure", "acts": [{"l": "Bibliothèque gauche", "on": true, "b": 68.38, "c": "#ffb9b8", "k": null}, {"l": "Bibliothèque droite", "on": true, "b": 91.83, "c": "#ffa746", "k": null}, {"l": "Musique gauche", "on": true, "b": 91.83, "c": "#ff7849", "k": null}, {"l": "Salle à manger - plafond", "on": true, "b": 91.83, "c": "#bd89ff", "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 91.83, "c": "#ff898e", "k": null}, {"l": "Plafond salon", "on": true, "b": 91.83, "c": "#ff914c", "k": null}, {"l": "Buffet gauche", "on": true, "b": 68.38, "c": "#ffb9b8", "k": null}, {"l": "Plafond cuisine", "on": false, "b": null, "c": null, "k": null}, {"l": "Buffet droite", "on": true, "b": 91.83, "c": "#ffa746", "k": null}, {"l": "Vinyles", "on": true, "b": 42.0, "c": "#ff7849", "k": null}, {"l": "Musique Droite", "on": true, "b": 42.0, "c": "#ffa746", "k": null}]}, {"nom": "Atténué", "acts": [{"l": "Musique gauche", "on": true, "b": 30.0, "c": "#ffa657", "k": 2703}, {"l": "Plafond salon", "on": true, "b": 30.0, "c": "#ffa657", "k": 2703}, {"l": "Plafond cuisine", "on": true, "b": 30.0, "c": null, "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 30.0, "c": "#ffa657", "k": 2703}, {"l": "Buffet gauche", "on": true, "b": 30.0, "c": "#ffa657", "k": 2703}, {"l": "Bibliothèque droite", "on": true, "b": 30.0, "c": "#ffa657", "k": 2703}, {"l": "Bibliothèque gauche", "on": true, "b": 30.0, "c": "#ffa657", "k": 2703}, {"l": "Buffet droite", "on": true, "b": 30.0, "c": "#ffa657", "k": 2703}, {"l": "Salle à manger - plafond", "on": true, "b": 30.0, "c": "#ffa657", "k": 2703}, {"l": "Vinyles", "on": true, "b": 30.0, "c": "#ffa657", "k": 2703}, {"l": "Musique Droite", "on": true, "b": 30.0, "c": "#ffa657", "k": 2703}]}, {"nom": "Toil and trouble", "acts": [{"l": "Bibliothèque gauche", "on": true, "b": 44.66, "c": "#9852ff", "k": null}, {"l": "Bibliothèque droite", "on": true, "b": 44.66, "c": "#6e05ff", "k": null}, {"l": "Musique gauche", "on": true, "b": 44.66, "c": "#6e05ff", "k": null}, {"l": "Salle à manger - plafond", "on": true, "b": 44.66, "c": "#ff711c", "k": null}, {"l": "Musique Droite", "on": true, "b": 90.51, "c": null, "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 44.66, "c": "#ff2703", "k": null}, {"l": "Vinyles", "on": true, "b": 90.51, "c": null, "k": null}, {"l": "Plafond salon", "on": true, "b": 44.66, "c": "#ff9732", "k": null}, {"l": "Buffet gauche", "on": true, "b": 44.66, "c": "#9852ff", "k": null}, {"l": "Plafond cuisine", "on": true, "b": 44.66, "c": null, "k": null}, {"l": "Buffet droite", "on": true, "b": 90.51, "c": null, "k": null}]}, {"nom": "Concentration", "acts": [{"l": "Musique gauche", "on": true, "b": 100.0, "c": "#ffd4b2", "k": 4292}, {"l": "Plafond salon", "on": true, "b": 100.0, "c": "#ffd4b2", "k": 4292}, {"l": "Plafond cuisine", "on": true, "b": 100.0, "c": null, "k": null}, {"l": "Hue color lamp 1", "on": true, "b": 100.0, "c": "#ffd4b2", "k": 4292}, {"l": "Buffet gauche", "on": true, "b": 100.0, "c": "#ffd4b2", "k": 4292}, {"l": "Bibliothèque droite", "on": true, "b": 100.0, "c": "#ffd4b2", "k": 4292}, {"l": "Bibliothèque gauche", "on": true, "b": 100.0, "c": "#ffd4b2", "k": 4292}, {"l": "Buffet droite", "on": true, "b": 100.0, "c": "#ffd4b2", "k": 4292}, {"l": "Salle à manger - plafond", "on": true, "b": 100.0, "c": "#ffd4b2", "k": 4292}, {"l": "Vinyles", "on": true, "b": 100.0, "c": "#ffd4b2", "k": 4292}, {"l": "Musique Droite", "on": true, "b": 100.0, "c": "#ffd4b2", "k": 4292}]}], "lampes": [{"nom": "Musique Droite", "zones": ["Salon"], "couleur": true, "blanc": true}, {"nom": "Musique gauche", "zones": ["Salon"], "couleur": true, "blanc": true}, {"nom": "Plafond salon", "zones": ["Salon"], "couleur": true, "blanc": true}, {"nom": "Hue color lamp 1", "zones": ["Salon"], "couleur": true, "blanc": true}, {"nom": "Bibliothèque droite", "zones": ["Salon"], "couleur": true, "blanc": true}, {"nom": "Bibliothèque gauche", "zones": ["Salon"], "couleur": true, "blanc": true}, {"nom": "Vinyles", "zones": ["Salle à manger"], "couleur": true, "blanc": true}, {"nom": "Salle à manger - plafond", "zones": ["Salle à manger"], "couleur": true, "blanc": true}, {"nom": "Buffet droite", "zones": ["Salle à manger"], "couleur": true, "blanc": true}, {"nom": "Buffet gauche", "zones": ["Salle à manger"], "couleur": true, "blanc": true}, {"nom": "Plafond cuisine", "zones": ["Cuisine"], "couleur": false, "blanc": false}]};
+
+const PISTES = [
+  { cle: "natif", nom: "Natif", phrase: "Comme un réglage du Mac : translucide, police du système.",
+    lignes: [["Caractère", "neutre, familier, rapide"], ["Où vit la couleur", "dans les tuiles et les curseurs"], ["Signature", "aucune : il se fond dans le système"]] },
+];
+
+const ech = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const rvb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const hex = t => "#" + t.map(v => Math.round(v).toString(16).padStart(2, "0")).join("");
+const melange = (a, b, t) => hex(rvb(a).map((v, i) => v + (rvb(b)[i] - v) * t));
+// Un blanc (réglé en kelvins) s'affiche éclairci : à l'écran, 2700 K brut paraît orange vif.
+const couleur = a => !a.on ? null : a.vue ? a.vue : a.k ? melange(a.c, "#ffffff", 0.45) : (a.c || "#ffe2bd");
+const teinte = h => { const [r, g, b] = rvb(h).map(v => v / 255), M = Math.max(r, g, b), m = Math.min(r, g, b), d = M - m || 1;
+  return (M === r ? ((g - b) / d + 6) % 6 : M === g ? (b - r) / d + 2 : (r - g) / d + 4) * 60; };
+const deTeinte = h => { const f = n => { const k = (n + h / 30) % 12; return 255 * (0.62 - 0.38 * Math.max(-1, Math.min(k - 3, 9 - k, 1))); }; return hex([f(0), f(8), f(4)]); };
+const deBlanc = v => v < 55 ? melange("#ffb36b", "#fff3e2", v / 55) : melange("#fff3e2", "#dbe7ff", (v - 55) / 45);
+const CHEVRON = '<svg viewBox="0 0 8 8" aria-hidden="true"><path d="M2.5 1 5.5 4 2.5 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function palette(scene) {
+  const c = [...new Set(scene.acts.filter(a => a.on).map(couleur))].sort((x, y) => teinte(x) - teinte(y));
+  const pas = Math.max(1, Math.ceil(c.length / 5));
+  return c.filter((_, i) => i % pas === 0).slice(0, 5);
+}
+function intensite(liste) { const b = liste.filter(a => a.on).map(a => a.b || 0); return b.length ? Math.round(b.reduce((x, y) => x + y, 0) / b.length) : 0; }
+
+function etatDepuis(scene) {
+  const parNom = Object.fromEntries(scene.acts.map(a => [a.l, a]));
+  return DONNEES.lampes.map(l => { const a = parNom[l.nom] || { on: false };
+    return { ...l, on: !!a.on, b: a.b || 0, c: a.c, k: a.k, mode: a.k ? "blanc" : "teinte" }; });
+}
+
+const DEPART = DONNEES.scenes.find(s => s.nom === "Coucher de soleil sur la savane") || DONNEES.scenes[0];
+
+function monter(piste) {
+  const etat = { scene: DEPART.nom, lampes: etatDepuis(DEPART), ouverte: "Plafond salon" };
+  const section = document.createElement("section");
+  section.className = "piste";
+  section.innerHTML = `<div><h2>${piste.nom}</h2><p class="phrase">${piste.phrase}</p><dl>${piste.lignes.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join("")}</dl></div>
+    <div class="scene-mur"><div class="vue"><span>Onglet Ambiances</span><div class="panneau ${piste.cle}" data-onglet="ambiances"></div></div>
+    <div class="vue"><span>Onglet Lampes, une lampe dépliée</span><div class="panneau ${piste.cle}" data-onglet="lampes"></div></div></div>`;
+  const panneaux = [...section.querySelectorAll(".panneau")];
+  const lampe = nom => etat.lampes.find(l => l.nom === nom);
+
+  const scenesHtml = () => DONNEES.scenes.map(s => {
+    const p = palette(s), g = p.length > 1 ? `linear-gradient(135deg, ${p.join(", ")})` : p[0], o = (intensite(s.acts) / 100).toFixed(2);
+    return `<button class="scene" data-scene="${ech(s.nom)}" aria-pressed="${s.nom === etat.scene}"><i style="--g:${g};--o:${o}"></i><span>${ech(s.nom)}</span></button>`;
+  }).join("");
+
+  const lampesHtml = () => {
+    let zone = null, html = "";
+    for (const l of etat.lampes) {
+      const z = l.zones[0] || "Autres";
+      if (z !== zone) { zone = z; html += `<div class="zone">${ech(z)}</div>`; }
+      const c = couleur(l), reglable = l.couleur || l.blanc, ouverte = reglable && etat.ouverte === l.nom, n = ech(l.nom);
+      const dedans = `<i class="pastille"></i><span>${n}</span>`;
+      html += `<div class="bloc ${l.on ? "" : "eteinte"} ${ouverte ? "ouvert" : ""}" data-bloc="${n}" style="${c ? `--c:${c}` : ""}"><div class="lampe">
+        ${reglable ? `<button class="nom" data-ouvrir="${n}" aria-expanded="${ouverte}" title="${n} : régler le blanc ou la couleur">${dedans}${CHEVRON}</button>` : `<div class="nom" title="${n}">${dedans}</div>`}
+        <input type="range" class="intensite" min="1" max="100" value="${l.b || 1}" style="--v:${l.on ? l.b : 0}%" data-lampe="${n}" aria-label="Intensité" ${l.on ? "" : "disabled"}>
+        <button class="inter" role="switch" aria-checked="${l.on}" data-inter="${n}" aria-label="${n}"></button></div>` +
+        (ouverte ? `<div class="depli">
+          <div class="reglage"><span>Blanc</span><input type="range" class="blanc" min="0" max="100" data-regle="${n}" value="${l.blancV ?? (l.k ? Math.round((l.k - 2000) / 45) : 40)}" style="${l.mode === "blanc" ? "--pouce:var(--c)" : ""}" ${l.on ? "" : "disabled"}></div>
+          <div class="reglage"><span>Couleur</span><input type="range" class="teinte" min="0" max="360" data-regle="${n}" value="${l.teinteV ?? (c ? Math.round(teinte(c)) : 30)}" style="${l.mode === "teinte" ? "--pouce:var(--c)" : ""}" ${l.on ? "" : "disabled"}></div></div>` : "") + `</div>`;
+    }
+    return html;
+  };
+
+  function dessiner() {
+    const allumees = etat.lampes.filter(l => l.on), n = allumees.length, moy = intensite(etat.lampes);
+    const phrase = n === 0 ? "Tout est éteint" : n === etat.lampes.length ? "Tout est allumé" : `${n} lampes allumées sur ${etat.lampes.length}`;
+    for (const p of panneaux) {
+      const onglet = p.dataset.onglet, defile = p.querySelector(".corps")?.scrollTop || 0;
+            p.innerHTML = `<div class="entete"><div class="noms"><div class="piece">Séjour</div><div class="etat">${phrase}</div></div>
+          <button class="inter" role="switch" aria-checked="${n > 0}" data-tout aria-label="Tout allumer ou éteindre"></button></div>
+        <div class="groupe"><input type="range" min="1" max="100" value="${moy || 1}" style="--v:${moy}%" data-groupe aria-label="Intensité de la pièce" ${n ? "" : "disabled"}><output>${moy} %</output></div>
+        <div class="onglets" role="tablist"><button role="tab" data-vers="ambiances" aria-selected="${onglet === "ambiances"}">Ambiances</button><button role="tab" data-vers="lampes" aria-selected="${onglet === "lampes"}">Lampes</button></div>
+        <div class="corps">${onglet === "ambiances" ? `<div class="scenes">${scenesHtml()}</div>` : lampesHtml()}</div>
+        <div class="pied"><button>Réglages</button></div>`;
+      p.querySelector(".corps").scrollTop = defile;
+    }
+  }
+
+  section.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    const p = b.closest(".panneau");
+    if (b.dataset.vers) p.dataset.onglet = b.dataset.vers;
+    else if (b.dataset.scene) { const s = DONNEES.scenes.find(x => x.nom === b.dataset.scene); etat.scene = s.nom; etat.lampes = etatDepuis(s); }
+    else if ("tout" in b.dataset) { const allumer = !etat.lampes.some(l => l.on); etat.lampes.forEach(l => { l.on = allumer; if (allumer && !l.b) l.b = 60; }); etat.scene = null; }
+    else if (b.dataset.inter) { const l = lampe(b.dataset.inter); l.on = !l.on; if (l.on && !l.b) l.b = 60; etat.scene = null; }
+    else if (b.dataset.ouvrir) etat.ouverte = etat.ouverte === b.dataset.ouvrir ? null : b.dataset.ouvrir;
+    else return;
+    dessiner();
+  });
+  // Pendant le geste : la couleur suit le curseur (pastille, poignée, dégradé de l'intensité), sans tout redessiner.
+  section.addEventListener("input", e => {
+    const c = e.target; if (c.type !== "range") return;
+    if ("groupe" in c.dataset || c.dataset.lampe) c.style.setProperty("--v", c.value + "%");
+    if ("groupe" in c.dataset) c.nextElementSibling.textContent = c.value + " %";
+    if (c.dataset.regle) {
+      const l = lampe(c.dataset.regle), blanc = c.classList.contains("blanc");
+      l.vue = blanc ? deBlanc(+c.value) : deTeinte(+c.value); l.mode = blanc ? "blanc" : "teinte";
+      if (blanc) l.blancV = +c.value; else l.teinteV = +c.value;
+      const bloc = c.closest(".bloc"); bloc.style.setProperty("--c", l.vue);
+      bloc.querySelectorAll(".depli input").forEach(i => i.style.setProperty("--pouce", i === c ? "var(--c)" : "#fff"));
+    }
+  });
+  section.addEventListener("change", e => {
+    const c = e.target; if (c.type !== "range") return;
+    if (c.dataset.lampe) lampe(c.dataset.lampe).b = +c.value;
+    else if ("groupe" in c.dataset) etat.lampes.forEach(l => { if (l.on) l.b = +c.value; });
+    etat.scene = null; dessiner();
+  });
+  dessiner();
+  return section;
+}
+
+document.getElementById("pistes").append(...PISTES.map(monter));
+</script>
+</html>

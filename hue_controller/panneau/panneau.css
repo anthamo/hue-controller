@@ -1,0 +1,149 @@
+* { box-sizing: border-box; }
+html, body { background: transparent; margin: 0; }
+
+/* Variables du panneau Natif (design/maquette.html, DESIGN.md) */
+.natif { --police: -apple-system, "Helvetica Neue", sans-serif; --texte: #1d1d1f; --second: #5c5c61; --bord: rgba(0,0,0,.1);
+  --tuile: rgba(255,255,255,.74); --inter-off: rgba(0,0,0,.18); --inter-on: #34c759;
+  --creux: rgba(0,0,0,.07); --releve: #fff; --bord-fort: rgba(0,0,0,.25); }
+
+/* Dans l'app, le panneau natif de macOS fournit fond, bordure, ombre et rayon. */
+.panneau { display: flex; flex-direction: column; width: 360px; height: 600px; overflow: hidden;
+  font: 13px/16px var(--police); color: var(--texte); }
+
+.entete { display: flex; align-items: center; gap: 12px; padding: 16px 12px 8px; }
+.entete .noms { flex: 1; min-width: 0; }
+.entete .piece { font-size: 20px; line-height: 24px; font-weight: 700; }
+.entete .etat { font-size: 12px; line-height: 16px; color: var(--second); }
+
+.inter { flex: none; width: 36px; height: 20px; border-radius: 10px; border: 0; padding: 2px; background: var(--inter-off); cursor: pointer; }
+.inter::after { content: ""; display: block; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); transition: transform .12s; }
+.inter[aria-checked="true"] { background: var(--inter-on); }
+.inter[aria-checked="true"]::after { transform: translateX(16px); }
+.inter:disabled { opacity: .3; cursor: default; }
+
+.corps { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 12px 12px; }
+
+.scenes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.scene { display: flex; align-items: center; gap: 8px; height: 48px; padding: 8px; border-radius: 8px; border: 0; background: var(--tuile); box-shadow: 0 1px 2px rgba(0,0,0,.06); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.scene i { flex: none; width: 32px; height: 32px; border-radius: 6px; background: var(--g); opacity: calc(.5 + var(--o) / 2); }
+.scene span { font-size: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* Au survol : le fond s'éclaircit et l'échantillon grossit un peu, avec une lueur de sa couleur (demande d'Antho, 12/11). */
+.scene { transition: background .12s; }
+.scene i { transition: transform .12s, box-shadow .12s; }
+.scene:hover { background: #fff; }
+.scene:hover i { transform: scale(1.12); box-shadow: 0 2px 8px color-mix(in srgb, var(--a) 50%, transparent); }
+/* Dans la liste, la scène en cours : fond blanc, anneau à sa propre couleur, coche posée sur l'échantillon
+   (demande d'Antho, 12/11). Ni gras ni coche à droite : ils coupaient « Coucher de soleil sur la savane ». */
+.scene { position: relative; }
+.scene[aria-pressed="true"] { background: #fff; box-shadow: inset 0 0 0 2px var(--a); }
+.scene[aria-pressed="true"]::after { content: ""; position: absolute; left: 16px; top: 16px; width: 16px; height: 16px; border-radius: 50%;
+  background: #fff url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M4.5 8.5 7 11 11.5 5.5" fill="none" stroke="%231d1d1f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>') center / contain no-repeat;
+  box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+/* Titres de section : petites capitales grises espacées, comme sur le modèle fourni par Antho (12/11). */
+.titre { margin: 0; padding: 4px 12px 8px; font-size: 11px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--second); }
+.titre[hidden] { display: none; }
+.actuelle { padding-bottom: 12px; }
+.carte { display: flex; align-items: center; gap: 12px; margin: 0 12px; padding: 12px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  background: linear-gradient(rgba(255,255,255,.8), rgba(255,255,255,.8)), var(--g), #fff; }
+.carte .echantillon { flex: none; width: 48px; height: 48px; border-radius: 6px; background: var(--g); box-shadow: 0 0 0 2px rgba(255,255,255,.9), 0 1px 4px rgba(0,0,0,.14); }
+.carte .nom { font-size: 16px; line-height: 20px; font-weight: 650; }
+.carte .lampes { display: flex; gap: 4px; margin-top: 8px; }
+.carte .lampes i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); }
+.carte .lampes i.eteinte { background: transparent; }
+.carte.vide { background: var(--tuile); }
+.carte.vide .nom { color: var(--second); font-weight: 400; }
+.carte.vide .echantillon { background: var(--creux, rgba(0,0,0,.07)); box-shadow: none; }
+
+/* Navigateur seulement : fond de démonstration, et le rendu que le panneau natif donne dans l'app. */
+html.demo body { min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #8fa3b8 0%, #5d6f86 45%, #3b4658 100%); }
+html.demo .panneau { background: rgba(244,244,246,.82); border: 1px solid var(--bord); border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,.28);
+  -webkit-backdrop-filter: blur(32px) saturate(1.6); backdrop-filter: blur(32px) saturate(1.6); }
+
+/* Curseur d'intensité de la pièce (design/maquette.html) : piste 8 px, poignée 20 px, un seul curseur pour toute l'appli. */
+.natif { --piste: rgba(0,0,0,.14); }
+/* Le curseur est dessiné ici, sur le modèle de celui de macOS 26 : piste fine à la couleur d'accent, poignée en gélule
+   qui devient une goutte de verre quand on la tient. Essayé et écarté le 12/11/2026 (essais/curseur_natif.py) :
+   le curseur par défaut de WebKit (piste épaisse cerclée de blanc) et le vrai NSSlider (poignée ronde). */
+/* Le curseur dans son creux : le soleil, la piste et le soleil se lisent comme un seul réglage. */
+.groupe { display: flex; align-items: center; gap: 8px; margin: 4px 12px 12px; padding: 8px 12px; border-radius: 8px; background: var(--creux, rgba(0,0,0,.07)); color: var(--texte); }
+.groupe[hidden] { display: none; }
+.groupe svg { flex: none; width: 16px; height: 16px; }
+.groupe:has(input:disabled) svg { opacity: .3; }
+/* La valeur chiffrée reste pour les lecteurs d'écran ; à l'œil, la poignée suffit, comme dans le système. */
+.groupe output { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+input[type=range] { -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; width: 100%; height: 16px; margin: 0; background: transparent; cursor: pointer; }
+input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--inter-on) var(--v, 50%), var(--piste) var(--v, 50%)); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 16px; margin-top: -6px; border-radius: 8px; background: #fff; box-shadow: 0 0 0 .5px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.22); transition: transform .15s, background .15s, box-shadow .15s; }
+input[type=range]:active::-webkit-slider-thumb { transform: scale(1.3); background: rgba(255,255,255,.4); box-shadow: 0 0 0 .5px rgba(255,255,255,.9), inset 0 0 4px 1px rgba(255,255,255,.95), 0 2px 8px rgba(0,0,0,.2); }
+input[type=range]:disabled { opacity: .3; cursor: default; }
+
+/* Onglets : un contrôle à deux segments dans un creux. Le segment choisi est relevé (blanc, gras, ombre légère). */
+.onglets { display: flex; gap: 2px; margin: 0 12px 12px; padding: 2px; border-radius: 8px; background: var(--creux); }
+.onglets[hidden], .actuelle[hidden] { display: none; }
+.onglets button { flex: 1; height: 24px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--second); font: inherit; cursor: pointer; }
+.onglets button[aria-selected="true"] { background: var(--releve); color: var(--texte); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+
+/* Lampes : une carte par lampe, dépliable (une seule à la fois). */
+.corps[hidden] { display: none; }
+.liste { padding-bottom: 12px; }
+.liste .titre { padding-left: 0; padding-right: 0; }
+.lampe { border-radius: 8px; background: var(--tuile); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+.lampe + .lampe { margin-top: 8px; }
+.lampe + .titre { margin-top: 12px; }
+.lampe:has(.haut:hover), .lampe.ouverte { background: #fff; }
+.haut { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 12px; }
+.entree { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; height: 56px; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.halo { flex: none; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: color-mix(in srgb, var(--c, transparent) 25%, transparent); }
+.halo i { width: 16px; height: 16px; border-radius: 50%; background: var(--c, transparent); }
+.lampe.eteinte .halo { background: var(--creux); }
+.lampe.eteinte .halo i { background: transparent; box-shadow: inset 0 0 0 1px var(--bord-fort); }
+.textes { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.lampe .nom { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; line-height: 16px; font-weight: 650; }
+.lampe.eteinte .nom { color: var(--second); }
+.infos { display: block; font-size: 12px; line-height: 16px; color: var(--second); font-variant-numeric: tabular-nums; }
+.pli { padding: 12px; border-top: 1px solid var(--bord); }
+.pli[hidden] { display: none; }
+.rang { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 12px; line-height: 16px; color: var(--second); }
+.rang output { color: var(--texte); font-variant-numeric: tabular-nums; }
+
+/* Titre de zone : le nom à gauche, le bouton « Tout éteindre / Tout allumer » à droite, sur la même ligne. */
+.titre-zone { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.zone-tout { flex: none; padding: 0; border: 0; background: none; font: inherit; font-size: 12px; line-height: 16px; font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--second); cursor: pointer; }
+.zone-tout:hover { color: var(--texte); }
+.zone-tout[hidden] { display: none; }
+
+/* Blanc, Saturation et Couleur : même curseur, mais la piste est un dégradé. Saturation va du blanc à la teinte pleine
+   (--fin, posée par panneau.js) ; Couleur est l'arc-en-ciel en couleurs pures. La poignée se remplit de la couleur de la lampe
+   (--pouce, posée par panneau.js) avec un contour blanc de 3 px. */
+.rang.sous { margin-top: 12px; }
+input[type=range].blanc::-webkit-slider-runnable-track { box-shadow: 0 0 0 1px var(--bord-fort); background: linear-gradient(to right, #ffb36b, #fff3e2 55%, #dbe7ff); }
+input[type=range].saturation::-webkit-slider-runnable-track { box-shadow: 0 0 0 1px var(--bord-fort); background: linear-gradient(to right, #fff, var(--fin, #f00)); }
+input[type=range].teinte::-webkit-slider-runnable-track { background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
+input[type=range].blanc::-webkit-slider-thumb, input[type=range].saturation::-webkit-slider-thumb, input[type=range].teinte::-webkit-slider-thumb { box-sizing: border-box; transition: transform .15s, box-shadow .15s; /* pas de fondu de la couleur : elle suit le doigt */ border: 3px solid #fff; background: var(--pouce, #fff); }
+input[type=range].blanc:active::-webkit-slider-thumb, input[type=range].saturation:active::-webkit-slider-thumb, input[type=range].teinte:active::-webkit-slider-thumb { background: var(--pouce, rgba(255,255,255,.4)); }
+
+/* Roue dentée de l'en-tête : 28 px, sans fond ; creux au survol et quand les réglages sont ouverts. */
+.roue { flex: none; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--second); cursor: pointer; }
+.roue svg { width: 16px; height: 16px; }
+.roue:hover, .roue[aria-pressed="true"] { background: var(--creux); }
+
+/* Vue Réglages : remplace tout ce qui est sous l'en-tête. */
+.panneau.en-reglages > :not(.entete):not(.reglages) { display: none; }
+.reglages { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; padding: 0 12px 12px; }
+.reglages[hidden] { display: none; }
+.reglages .titre { padding-left: 0; padding-right: 0; }
+.reglages .bloc { flex: none; padding: 12px; border-radius: 8px; background: var(--tuile); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+.reglages .bloc + .bloc { margin-top: 12px; }
+.libelle { display: block; font-size: 12px; line-height: 16px; color: var(--second); }
+.champ { display: block; width: 100%; height: 28px; margin-top: 4px; padding: 0 8px; border: 0; border-radius: 6px; background: #fff; box-shadow: inset 0 0 0 1px var(--bord-fort); color: var(--texte); font: inherit; outline: none; }
+.champ:focus { outline: 2px solid var(--inter-on); }
+.statut { margin-top: 8px; font-size: 12px; line-height: 16px; color: var(--second); }
+.statut.erreur { color: var(--texte); }
+.enregistrer { display: block; height: 28px; margin-top: 8px; padding: 0 12px; border: 0; border-radius: 6px; background: var(--texte); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.enregistrer[hidden] { display: none; }
+.reglages .bloc.ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 44px; padding: 0 12px; }
+.quitter { flex: none; align-self: flex-start; height: 28px; margin-top: 12px; padding: 0; border: 0; background: none; color: var(--second); font: inherit; cursor: pointer; }
+.quitter:hover { color: var(--texte); }
+.bas { flex: none; display: flex; justify-content: flex-end; margin-top: auto; padding-top: 12px; }
+.termine { height: 28px; padding: 0 12px; border: 0; border-radius: 6px; background: var(--creux); color: var(--texte); font: inherit; font-weight: 600; cursor: pointer; }
