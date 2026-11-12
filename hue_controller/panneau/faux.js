@@ -1,6 +1,11 @@
 // Faux bridge pour le navigateur : garde l'état en mémoire et applique les gestes. Ne touche à aucune lampe.
 (function () {
-  const etat = JSON.parse(JSON.stringify(window.ETAT_FAUX));
+  // `etat` est celui de la pièce en cours ; `etats` garde chaque pièce déjà visitée, pour la retrouver telle qu'on l'a laissée.
+  let etat = JSON.parse(JSON.stringify(window.ETAT_FAUX));
+  const depart = etat.piece.nom;
+  if (!Array.isArray(etat.pieces) || etat.pieces.length < 2) etat.pieces = [depart, ...["Séjour", "Chambre"].filter(n => n !== depart)];
+  const pieces = etat.pieces;
+  const etats = { [depart]: etat };
 
   // Le contrat veut une couleur nulle pour une lampe éteinte : on garde la dernière connue pour la rendre au rallumage.
   const memoire = {};
@@ -16,6 +21,17 @@
     etat.piece.total = etat.lampes.length;
     etat.piece.on = allumees > 0;
     etat.zones.forEach(z => { z.allumees = etat.lampes.filter(l => l.zone === z.nom && l.on).length; });
+  }
+
+  // Une pièce sans données : même forme que l'état complet, une lampe et deux scènes inventées.
+  function fabriquer(nom) {
+    const id = "faux-" + nom.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    memoire[id + "-plafond"] = "#ffe2bd";
+    return { connexion: "ok", piece: { nom, on: true, intensite: 80, allumees: 1, total: 1 },
+      scenes: [{ id: id + "-lecture", nom: "Lecture", couleurs: ["#ffd9a8"], intensite: 80, active: false },
+        { id: id + "-veilleuse", nom: "Veilleuse", couleurs: ["#ff9f5a"], intensite: 10, active: false }],
+      lampes: [{ id: id + "-plafond", nom: "Plafond", zone: "Autres", on: true, intensite: 80, couleur: "#ffe2bd", reglages: [], mode: null, kelvin: null, kelvins: null, teinte: null, saturation: null }],
+      zones: [], pieces };
   }
 
   // Même calcul que la page (panneau.js) : la couleur d'écran d'un blanc ou d'un couple (teinte, saturation).
@@ -43,6 +59,16 @@
     }
     if (message.action === "quitter") { console.log("quitter"); return; }
     if (message.action === "auteur") { window.open("https://github.com/anthamo", "_blank"); return; }
+    if (message.action === "changer_piece") {
+      if (typeof message.nom !== "string" || !pieces.includes(message.nom)) return;
+      const nom = message.nom;
+      setTimeout(() => {
+        if (!etats[nom]) etats[nom] = fabriquer(nom);
+        etat = etats[nom];
+        window.recevoir(JSON.parse(JSON.stringify(etat)));
+      }, 300);
+      return;
+    }
     if (message.action === "scene") {
       if (!etat.scenes.some(s => s.id === message.id)) return;
       etat.scenes.forEach(s => { s.active = s.id === message.id; });

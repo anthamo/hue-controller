@@ -79,9 +79,18 @@ class TestEtat(unittest.TestCase):
 
     def test_piece_introuvable(self):
         e = etat.construire(BRUT, "Grenier")
-        self.assertEqual(e, etat.erreur("La pièce « Grenier » n'existe pas sur le bridge."))
+        self.assertEqual(e, {**etat.erreur("La pièce « Grenier » n'existe pas sur le bridge."), "pieces": self.e["pieces"]})
+        self.assertTrue(e["pieces"])
         self.assertEqual(e["connexion"], "erreur")
         self.assertEqual((e["piece"], e["scenes"], e["lampes"]), (None, [], []))
+
+    def test_pieces(self):
+        noms = [r["metadata"]["name"] for r in BRUT["room"]]
+        self.assertEqual(len(noms), 2)
+        self.assertEqual(self.e["pieces"], noms)
+        self.assertIn("Séjour", self.e["pieces"])
+        self.assertEqual(etat.erreur("x")["pieces"], [])
+        self.assertEqual(etat.sans_reglages("x")["pieces"], [])
 
     def test_sans_reglages(self):
         e = etat.sans_reglages("x")

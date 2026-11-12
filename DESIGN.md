@@ -57,7 +57,8 @@ De haut en bas, dans l'ordre des gestes :
      - lampe blanche à température réglable : le curseur de température seul (libellé « Température ») ;
      - lampe à blanc fixe (« Plafond cuisine », une Hue white) : rien de plus, l'ampoule n'a pas ce réglage.
    - Le curseur d'une lampe se remplit de la couleur d'accent, comme celui de la pièce : rempli de la couleur d'une lampe blanche, il ne se voyait pas. La couleur de la lampe est portée par le halo.
-6. **Réglages** : une roue dentée dans l'en-tête, entre le nom de la pièce et l'interrupteur. Elle remplace tout ce qui est sous l'en-tête par la vue Réglages ; « Terminé » en revient. Pas de pied de panneau.
+6. **Pied : le choix de la pièce** (demande d'Antho, 12/11), seulement si le bridge a plus d'une pièce. Une barre de 40 px en bas du panneau, séparée par un filet : à gauche, un bouton avec une petite maison, le nom de la pièce en cours et un chevron vers le bas. Un clic ouvre au-dessus de lui la liste des pièces, la pièce en cours cochée ; choisir une pièce referme la liste, et tout le panneau passe à cette pièce. La dernière pièce choisie est gardée : c'est elle qui s'affiche à la prochaine ouverture. Le pied n'apparaît pas dans la vue Réglages.
+7. **Réglages** : une roue dentée dans l'en-tête, entre le nom de la pièce et l'interrupteur. Elle remplace tout ce qui est sous l'en-tête par la vue Réglages ; « Terminé » en revient.
    - **Bridge** : l'adresse (un champ), l'état de la connexion en une phrase (« Connecté », ou la phrase d'erreur), « Enregistrer » qui n'apparaît que si l'adresse a changé.
    - **Lancer à l'ouverture de session** : un interrupteur.
    - **Quitter Hue Controller** : une carte cliquable de même forme que celle du dessus, avec le pictogramme marche/arrêt (en texte seul, on le prenait pour un libellé).

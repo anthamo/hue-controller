@@ -22,7 +22,7 @@ Les lignes marquées **[à confirmer]** sont des propositions de ma part, pas de
 
 ## 2. La solution
 
-**Description.** Une icône d'ampoule dans la barre de menus. Un clic ouvre un panneau accroché à l'icône. Tout se passe dans ce panneau : aucune fenêtre à part. **Une seule pièce : le Séjour** (11 lampes, 22 scènes). Pas de sélecteur de pièce, pas de zones, pas la chambre (décidé par Antho, 12/11). Les noms des lampes et des scènes sont relus sur le bridge, jamais écrits en dur.
+**Description.** Une icône d'ampoule dans la barre de menus. Un clic ouvre un panneau accroché à l'icône. Tout se passe dans ce panneau : aucune fenêtre à part. **Une pièce à la fois.** Au départ, le Séjour seul (11 lampes, 22 scènes), sans sélecteur. Changé par Antho le 12/11, une fois l'app en usage : s'il y a plus d'une pièce sur le bridge, un sélecteur en bas du panneau permet d'en changer, et la dernière pièce choisie est gardée. Les noms des lampes et des scènes sont relus sur le bridge, jamais écrits en dur.
 
 ```
                                    [ampoule]   son   wifi   heure

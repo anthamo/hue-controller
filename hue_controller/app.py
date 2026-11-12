@@ -99,6 +99,13 @@ class Travail:
                 self._demande = "tout" if complet else "vif"
             self._verrou.notify()
 
+    def changer_piece(self, nom):
+        with self._verrou:
+            self._piece = nom
+            self._cadence = ordres.Cadence()  # les ordres en attente visaient l'ancienne pièce
+            self._demande = "tout"
+            self._verrou.notify()
+
     def panneau(self, ouvert):
         with self._verrou:
             self._ouvert = ouvert
@@ -166,14 +173,16 @@ class Travail:
                 self._verrou.wait(min(echeances) if echeances else None)
 
     def _lire(self, complet):
+        with self._verrou:
+            piece = self._piece  # une seule fois : changer_piece peut la remplacer pendant la lecture
         if complet or self._tout_relire or self._brut is None:
             self._brut = ordres.lire_tout(self._bridge)
             self._tout_relire = False
             self.derniere_complete = time.monotonic()
         else:
             self._brut = ordres.lire_vif(self._bridge, self._brut)
-        self.id_groupe = ordres.groupe_de(self._brut, self._piece)
-        self._publier(etat_mod.construire(self._brut, self._piece))
+        self.id_groupe = ordres.groupe_de(self._brut, piece)
+        self._publier(etat_mod.construire(self._brut, piece))
 
     def _publier(self, etat):
         with self._verrou:
@@ -330,6 +339,9 @@ class App(NSObject):
         if isinstance(message, dict) and message.get("action") in ("reglages", "demarrage", "quitter", "auteur"):
             self.message_reglages(message)
             return
+        if isinstance(message, dict) and message.get("action") == "changer_piece":
+            self.changer_piece(message.get("nom"))
+            return
         if not self.travail:
             return
         noter("message", {k: v for k, v in message.items() if k != "id"} if isinstance(message, dict) else message)
@@ -338,6 +350,23 @@ class App(NSObject):
             print("message refusé", flush=True)
             return
         self.travail.ordre(*ordre)
+
+    @objc.python_method
+    def changer_piece(self, nom):
+        etat = self.travail.dernier_etat if self.travail else None
+        if not isinstance(nom, str) or not etat or nom not in etat["pieces"]:
+            print("message refusé", flush=True)
+            return
+        regl = reglages.charger()
+        if regl is None or regl["piece"] == nom:
+            return
+        regl["piece"] = nom
+        try:
+            reglages.enregistrer(regl)
+        except OSError:
+            pass  # la pièce change pour la session ; elle ne sera juste pas retenue
+        # Rien de provisoire poussé : la lecture complète publie le nouvel état.
+        self.travail.changer_piece(nom)
 
     @objc.python_method
     def message_reglages(self, message):

@@ -82,6 +82,51 @@ let ouverte = null;
 // Défilement de chaque zone, gardé à part : une zone cachée perd son défilement.
 const defile = { scenes: 0, lampes: 0 };
 
+// Sélecteur de pièce. `attente` : la pièce choisie dont on attend l'état (4 s au plus), le temps que le bouton la dise déjà.
+let attente = null, menuOuvert = false;
+const piecesDe = e => (e && Array.isArray(e.pieces) ? e.pieces : []);
+
+function fermerMenu() {
+  menuOuvert = false;
+  racine.querySelector(".menu").hidden = true;
+  racine.querySelector(".choix").setAttribute("aria-expanded", "false");
+}
+
+function majPied() {
+  const pied = racine.querySelector(".pied"), menu = racine.querySelector(".menu"), bouton = racine.querySelector(".choix");
+  const ok = etat.connexion === "ok";
+  const visible = (ok || etat.connexion === "erreur") && piecesDe(etat).length > 1 && !reglagesOuverts;
+  pied.hidden = !visible;
+  if (!visible) menuOuvert = false;
+  const affichee = attente ? attente.nom : (ok ? etat.piece.nom : null);
+  bouton.querySelector(".nom-piece").textContent = affichee ?? "Choisir une pièce";
+  bouton.setAttribute("aria-expanded", String(menuOuvert));
+  menu.hidden = !menuOuvert;
+  menu.innerHTML = piecesDe(etat).map(n => `<button type="button" role="option" aria-selected="${n === affichee}" data-piece="${ech(n)}"><span class="coche">${n === affichee ? '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ""}</span>${ech(n)}</button>`).join("");
+  racine.classList.toggle("change", !!attente);
+}
+
+function finAttente() {
+  if (!attente) return;
+  clearTimeout(attente.minuteur);
+  attente = null;
+  if (etat) dessiner();
+}
+
+function choisirPiece(nom) {
+  fermerMenu();
+  const affichee = attente ? attente.nom : (etat.connexion === "ok" ? etat.piece.nom : null);
+  if (nom === affichee) { majPied(); return; }
+  if (attente) clearTimeout(attente.minuteur);
+  attente = { nom, minuteur: setTimeout(finAttente, 4000) };
+  majPied();
+  envoyer({ action: "changer_piece", nom });
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && menuOuvert) { fermerMenu(); majPied(); }
+});
+
 function creerSqueletteSiBesoin() {
   if (racine.querySelector(".entete")) return;
   racine.innerHTML =
@@ -103,7 +148,9 @@ function creerSqueletteSiBesoin() {
       <div class="bloc ligne"><span>Lancer à l'ouverture de session</span><button class="inter" role="switch" aria-checked="false" aria-label="Lancer à l'ouverture de session" data-demarrage></button></div>
       <button type="button" class="quitter"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v6M4.6 4.2a5 5 0 1 0 6.8 0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Quitter Hue Controller</button>
       <div class="bas"><button type="button" class="auteur">Application créée par Anthony Hamo</button><button type="button" class="termine">Terminé</button></div>
-    </div>`;
+    </div>
+    <div class="pied" hidden><button type="button" class="choix" aria-haspopup="listbox" aria-expanded="false" aria-label="Changer de pièce"><svg class="maison" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 7.5 8 2.5l6 5M3.5 6.5v7h9v-7" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="nom-piece"></span><svg class="chevron" viewBox="0 0 8 8" aria-hidden="true"><path d="M1 2.5 4 5.5 7 2.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+    <div class="menu" role="listbox" aria-label="Pièces" hidden></div>`;
   preparerReglages();
   groupe = racine.querySelector(".groupe");
   curseur = groupe.querySelector("input");
@@ -153,6 +200,7 @@ function basculerReglages(ouvrir) {
   racine.classList.toggle("en-reglages", ouvrir);
   racine.querySelector(".reglages").hidden = !ouvrir;
   racine.querySelector(".roue").setAttribute("aria-pressed", String(ouvrir));
+  if (etat) majPied();
   if (ouvrir) {
     majReglages();
     envoyer({ action: "reglages" });
@@ -450,6 +498,7 @@ function dessiner(force) {
   if (!reglagesOuverts && !liste.hidden) liste.scrollTop = defile.lampes;
   majCurseur(force);
   majReglages();
+  majPied();
 }
 
 // L'app donne la couleur d'accent choisie dans les réglages du Mac ; le navigateur garde le vert par défaut.
@@ -457,13 +506,30 @@ window.accent = couleur => racine.style.setProperty("--inter-on", couleur);
 
 window.recevoir = function (nouvelEtat) {
   etat = nouvelEtat;
+  // La pièce attendue est arrivée (ou une erreur) : on repart de zéro, sauf l'onglet.
+  const arrivee = !!attente && (etat.connexion !== "ok" || (etat.piece && etat.piece.nom === attente.nom));
+  if (arrivee) {
+    clearTimeout(attente.minuteur);
+    attente = null;
+    ouverte = null;
+    lignes.forEach(g => { g.choix = null; });
+  }
   dessiner();
+  if (arrivee) {
+    defile.scenes = 0; defile.lampes = 0;
+    racine.querySelectorAll(".corps").forEach(c => { c.scrollTop = 0; });
+  }
 };
 
 // Le geste s'affiche tout de suite ; l'état reçu ensuite fait foi.
 racine.addEventListener("click", e => {
   const b = e.target.closest("button");
+  // Un clic ailleurs que sur le bouton ou la liste referme la liste.
+  const surMenu = b && (b.classList.contains("choix") || b.closest(".menu"));
+  if (menuOuvert && !surMenu) { fermerMenu(); majPied(); }
   if (!b) return;
+  if (b.classList.contains("choix")) { menuOuvert = !menuOuvert; majPied(); return; }
+  if (b.closest(".menu")) { if (b.dataset.piece != null) choisirPiece(b.dataset.piece); return; }
   // La roue et la vue Réglages marchent dans tous les états, y compris sans connexion.
   if (b.classList.contains("roue")) { basculerReglages(!reglagesOuverts); return; }
   if (b.closest(".reglages")) {
@@ -477,7 +543,7 @@ racine.addEventListener("click", e => {
     else if (b.classList.contains("auteur")) envoyer({ action: "auteur" });  // l'app ouvre la page GitHub dans le navigateur
     return;
   }
-  if (!etat || etat.connexion !== "ok") return;
+  if (!etat || etat.connexion !== "ok" || attente) return;
   if (b.dataset.onglet) {
     const corps = racine.querySelector(".corps:not(.liste)"), liste = racine.querySelector(".liste");
     if (!corps.hidden) defile.scenes = corps.scrollTop;

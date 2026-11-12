@@ -64,6 +64,7 @@ C'est la frontière la plus importante : la page et Python peuvent être écrits
 | `{action: "reglages", bridge_ip}` | changer l'adresse du bridge | 5 |
 | `{action: "demarrage", on}` | lancer ou non l'app à l'ouverture de session | 5 |
 | `{action: "quitter"}` | arrêter l'app | 5 |
+| `{action: "changer_piece", nom}` | piloter une autre pièce du bridge ; elle est gardée dans les réglages et revient à la prochaine ouverture | ajouté le 12/11 |
 
 **Python répond** en appelant `window.recevoir(etat)` :
 
@@ -87,6 +88,7 @@ Aux messages de réglages, Python répond par `window.reglages({"bridge_ip": "19
 - Toutes les couleurs sont déjà des couleurs d'écran (`#rrggbb`). La page n'en calcule aucune, sauf pendant qu'on tire un curseur.
 - `zones` (ajouté le 12/11) : `[{"id": "…", "nom": "Salon", "allumees": 6, "total": 6}]`, une entrée par zone du bridge qui contient au moins une lampe de la pièce, dans l'ordre du bridge. `id` est celui du groupe de lampes de la zone : c'est lui qu'on commande.
 - Lampe de couleur (ajouté le 12/11) : `teinte` (0 à 360) et `saturation` (0 à 100) sont toujours donnés, calculés depuis la couleur que la lampe rapporte, quel que soit son mode. La couleur d'écran d'un couple (teinte, saturation) est celle de même teinte, à cette saturation et à pleine clarté. `kelvins` : `[mini, maxi]` pour une lampe qui a le blanc, sinon `null`.
+- `pieces` (ajouté le 12/11) : les noms de toutes les pièces du bridge, dans l'ordre du bridge. La page n'affiche le sélecteur de pièce que s'il y en a plus d'une.
 - `scenes[].couleurs` : cinq au plus, triées par teinte. `lampes` : dans l'ordre des zones.
 - Les noms viennent toujours du bridge.
 
@@ -99,7 +101,7 @@ Aux messages de réglages, Python répond par `window.reglages({"bridge_ip": "19
 5. **Ce qui ne change pas se lit une fois.** Pièces, zones et appareils (les noms, qui est où) sont lus au lancement et relus toutes les dix minutes. À l'ouverture du panneau, puis toutes les cinq secondes tant qu'il est ouvert, et 0,6 s après chaque ordre : seulement les lampes, les scènes et le groupe.
 6. **Pendant qu'on tire un curseur, seul le dernier ordre compte.** Un seul ordre en attente par cible. Un ordre par seconde vers la pièce (consigne de Hue pour un groupe). Vers une lampe : quatre par seconde, avec un fondu de 200 ms. Le bridge en accepte dix, mais les lampes ne suivent pas : les ordres s'empilent et la lampe rejoue le geste en retard (constaté le 12/11/2026 ; le bridge lui-même répond en 28 ms).
 7. **La page affiche tout de suite le geste, sans attendre le bridge**, et ignore l'état reçu pour le contrôle qu'on est en train de manipuler. Sinon le curseur saute sous le doigt.
-8. **La page ne peut agir que sur le Séjour.** Python refuse tout identifiant qui n'est pas dans le dernier état construit, et borne chaque valeur (1 à 100, 2000 à 6500, 0 à 360).
+8. **La page ne peut agir que sur la pièce en cours.** Python refuse tout identifiant qui n'est pas dans le dernier état construit, et borne chaque valeur (1 à 100, 2000 à 6500, 0 à 360). Changer de pièce ne se fait que par le message `changer_piece`, avec un nom présent dans `pieces`.
 9. **Réglages dans `~/Library/Application Support/hue-controller/reglages.json`**, lisible par le seul utilisateur : `bridge_ip`, `cle`, `piece` (« Séjour »). Hors du dépôt. Pour un second Mac : copier ce fichier. Pas d'appairage dans l'app (PRD). **Première connexion** (`appairage.py`, ajouté le 12/11 pour que l'app s'installe ailleurs que chez son auteur) : la commande cherche le bridge par l'annuaire de Philips Hue, attend l'appui sur son bouton, obtient une clé, fait choisir la pièce et écrit ce fichier. Elle n'a pas été essayée sur un vrai bridge.
 10. **Le certificat du bridge n'est pas vérifié**, comme dans le téléphone : il est signé par Signify, pas par une autorité connue du Mac, et tout reste sur le réseau de la maison. Amélioration possible plus tard : n'accepter que l'autorité de Signify.
 11. **Travailler sans toucher aux lampes.** Ouverte dans un navigateur, la page ne trouve pas le Mac derrière elle et charge `faux.js` : un faux bridge qui répond avec un état figé et applique les gestes en mémoire. Tout le travail d'interface se fait là. Les tests Python utilisent un faux transport. **Aucun ordre ne part vers les vraies lampes sans le oui d'Antho juste avant.**

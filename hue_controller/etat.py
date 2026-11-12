@@ -15,11 +15,11 @@ def _arrondi(v):
 
 
 def erreur(message):
-    return {"connexion": "erreur", "message": message, "piece": None, "scenes": [], "lampes": [], "zones": []}
+    return {"connexion": "erreur", "message": message, "piece": None, "pieces": [], "scenes": [], "lampes": [], "zones": []}
 
 
 def sans_reglages(message):
-    return {"connexion": "reglages", "message": message, "piece": None, "scenes": [], "lampes": [], "zones": []}
+    return {"connexion": "reglages", "message": message, "piece": None, "pieces": [], "scenes": [], "lampes": [], "zones": []}
 
 
 def _ids_lampes_de_appareil(appareil):
@@ -117,8 +117,10 @@ def _scene(scene):
 
 def construire(brut, piece):
     salle = next((r for r in brut["room"] if r["metadata"]["name"] == piece), None)
+    pieces = [r["metadata"]["name"] for r in brut["room"]]
     if salle is None:
-        return erreur(f"La pièce « {piece} » n'existe pas sur le bridge.")
+        # La liste reste donnée : c'est elle qui permet d'en choisir une autre.
+        return {**erreur(f"La pièce « {piece} » n'existe pas sur le bridge."), "pieces": pieces}
 
     appareils = {d["id"]: d for d in brut["device"]}
     lampes_par_id = {l["id"]: l for l in brut["light"]}
@@ -168,6 +170,7 @@ def construire(brut, piece):
             "allumees": sum(1 for l in lampes if l["on"]),
             "total": len(lampes),
         },
+        "pieces": pieces,
         "scenes": [_scene(s) for s in brut["scene"] if s.get("group", {}).get("rid") == salle["id"]],
         "lampes": lampes,
         "zones": zones,
