@@ -159,8 +159,12 @@ input[type=range].blanc.apres { margin-top: 12px; }
 .enregistrer { display: block; height: 28px; margin-top: 8px; padding: 0 12px; border: 0; border-radius: 6px; background: var(--plein-fond); color: var(--plein-texte); font: inherit; font-weight: 600; cursor: pointer; }
 .enregistrer[hidden] { display: none; }
 .reglages .bloc.ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 44px; padding: 0 12px; }
-.quitter { flex: none; align-self: flex-start; height: 28px; margin-top: 12px; padding: 0; border: 0; background: none; color: var(--second); font: inherit; cursor: pointer; }
-.quitter:hover { color: var(--texte); }
+/* Quitter : une carte cliquable comme celle du dessus, avec le pictogramme marche/arrêt. En texte seul, il se lisait
+   comme un libellé (Antho, 12/11). */
+.quitter { display: flex; align-items: center; gap: 8px; width: 100%; height: 44px; margin-top: 12px; padding: 0 12px; border: 0; border-radius: 8px;
+  background: var(--tuile); box-shadow: 0 1px 2px rgba(0,0,0,.06); color: var(--texte); font: inherit; text-align: left; cursor: pointer; transition: background .12s; }
+.quitter:hover { background: var(--avant); }
+.quitter svg { flex: none; width: 16px; height: 16px; color: var(--second); }
 .bas { flex: none; display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 12px; }
 /* La signature : en bas à gauche des réglages, sur la ligne de « Terminé ». */
 .auteur { height: 28px; padding: 0; border: 0; background: none; font: inherit; font-size: 12px; color: var(--second); cursor: pointer; }

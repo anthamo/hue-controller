@@ -60,7 +60,7 @@ De haut en bas, dans l'ordre des gestes :
 6. **Réglages** : une roue dentée dans l'en-tête, entre le nom de la pièce et l'interrupteur. Elle remplace tout ce qui est sous l'en-tête par la vue Réglages ; « Terminé » en revient. Pas de pied de panneau.
    - **Bridge** : l'adresse (un champ), l'état de la connexion en une phrase (« Connecté », ou la phrase d'erreur), « Enregistrer » qui n'apparaît que si l'adresse a changé.
    - **Lancer à l'ouverture de session** : un interrupteur.
-   - **Quitter Hue Controller** : un bouton, en bas, discret.
+   - **Quitter Hue Controller** : une carte cliquable de même forme que celle du dessus, avec le pictogramme marche/arrêt (en texte seul, on le prenait pour un libellé).
    - En bas à gauche, sur la ligne de « Terminé » : « Application créée par Anthony Hamo », en texte secondaire ; un clic ouvre sa page GitHub dans le navigateur.
 
 ## Règles

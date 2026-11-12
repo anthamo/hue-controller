@@ -101,7 +101,7 @@ function creerSqueletteSiBesoin() {
         <button type="button" class="enregistrer" hidden>Enregistrer</button>
       </div>
       <div class="bloc ligne"><span>Lancer à l'ouverture de session</span><button class="inter" role="switch" aria-checked="false" aria-label="Lancer à l'ouverture de session" data-demarrage></button></div>
-      <button type="button" class="quitter">Quitter Hue Controller</button>
+      <button type="button" class="quitter"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v6M4.6 4.2a5 5 0 1 0 6.8 0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Quitter Hue Controller</button>
       <div class="bas"><button type="button" class="auteur">Application créée par Anthony Hamo</button><button type="button" class="termine">Terminé</button></div>
     </div>`;
   preparerReglages();
