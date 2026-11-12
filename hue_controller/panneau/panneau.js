@@ -242,7 +242,7 @@ function construireLignes(liste) {
         dessiner();
         envoyer({ action: "lampe", id: ligne.id, intensite: v });
       });
-      // Chaleur du blanc et roue chromatique : créées avec la carte, chacune avec son « tenu / touché », comme la luminosité (décision 7).
+      // Température du blanc et roue chromatique : créées avec la carte, chacune avec son « tenu / touché », comme la luminosité (décision 7).
       ligne.reg = {};
       const blanc = el.querySelector("input.blanc");
       if (blanc) {
@@ -279,11 +279,11 @@ function construireLignes(liste) {
   });
 }
 
-// Sous Luminosité : lampe de couleur = sélecteur Couleur / Blanc (s'il y a un blanc) puis roue et chaleur, un seul visible ;
-// lampe blanche = la chaleur ; blanc fixe = rien.
+// Sous Luminosité : lampe de couleur = sélecteur Couleur / Blanc (s'il y a un blanc) puis roue et température, un seul visible ;
+// lampe blanche = la température ; blanc fixe = rien.
 function sousLuminosite(l) {
   const couleur = l.reglages?.includes("teinte"), blanc = l.reglages?.includes("blanc");
-  if (!couleur) return blanc ? `<div class="rang sous"><span>Chaleur</span></div><input type="range" class="blanc" min="2000" max="6500" value="2700">` : "";
+  if (!couleur) return blanc ? `<div class="rang sous"><span>Température</span></div><input type="range" class="blanc" min="2000" max="6500" value="2700">` : "";
   return (blanc ? `<div class="onglets mode" role="tablist" aria-label="Réglage de la lampe"><button type="button" role="tab" data-mode="couleur" aria-selected="true">Couleur</button><button type="button" role="tab" data-mode="blanc" aria-selected="false">Blanc</button></div>` : "")
     + `<div class="chroma" role="slider" aria-valuemin="0" aria-valuemax="359" aria-valuenow="0"><i class="repere"></i></div>`
     + (blanc ? `<input type="range" class="blanc apres" min="2000" max="6500" value="2700">` : "");
@@ -292,7 +292,7 @@ function sousLuminosite(l) {
 // Un interrupteur est un geste voulu : l'état qu'il provoque doit passer sur tous les curseurs.
 function libere(g) { g.dernierGeste = 0; g.local = null; Object.values(g.reg).forEach(r => { r.dernierGeste = 0; }); }
 
-// Chaleur ou roue tirée : la lampe prend tout de suite la couleur du geste (halo, repère, ligne d'état),
+// Température ou roue tirée : la lampe prend tout de suite la couleur du geste (halo, repère, ligne d'état),
 // l'état reçu fera foi après. Teinte et saturation partent toujours ensemble : le bridge reçoit un seul couple.
 function gesteReglage(g, v) {
   const lampe = etat?.lampes.find(x => x.id === g.id);
@@ -378,7 +378,7 @@ function majLignes() {
     const blanc = g.reg.blanc, roue = g.reg.roue;
     if (blanc) {
       blanc.el.hidden = !!roue && mode !== "blanc";
-      blanc.el.setAttribute("aria-label", "Chaleur de " + l.nom);
+      blanc.el.setAttribute("aria-label", "Température de " + l.nom);
       // La poignée porte la couleur de la lampe quand la lampe est en blanc.
       blanc.el.style.setProperty("--pouce", lm.mode === "blanc" && coul ? coul : "");
       if (!touche(blanc)) {
@@ -508,7 +508,7 @@ racine.addEventListener("click", e => {
     // La carte dépliée est plus haute que la place restante (la roue fait 192 px) : on la fait défiler en vue.
     if (ouverte) b.closest(".lampe").scrollIntoView({ block: "nearest", behavior: "smooth" });
   } else if (b.dataset.mode) {
-    // Changer de segment n'envoie rien : le premier geste sur la roue ou la chaleur change la lampe.
+    // Changer de segment n'envoie rien : le premier geste sur la roue ou la température change la lampe.
     const g = lignes.get(b.closest(".lampe").dataset.id);
     if (!g) return;
     g.choix = b.dataset.mode;
