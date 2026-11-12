@@ -161,5 +161,7 @@ input[type=range].blanc.apres { margin-top: 12px; }
 .reglages .bloc.ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 44px; padding: 0 12px; }
 .quitter { flex: none; align-self: flex-start; height: 28px; margin-top: 12px; padding: 0; border: 0; background: none; color: var(--second); font: inherit; cursor: pointer; }
 .quitter:hover { color: var(--texte); }
-.bas { flex: none; display: flex; justify-content: flex-end; margin-top: auto; padding-top: 12px; }
+.bas { flex: none; display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 12px; }
+/* La signature : en bas à gauche des réglages, sur la ligne de « Terminé ». */
+.auteur { font-size: 12px; line-height: 16px; color: var(--second); }
 .termine { height: 28px; padding: 0 12px; border: 0; border-radius: 6px; background: var(--creux); color: var(--texte); font: inherit; font-weight: 600; cursor: pointer; }

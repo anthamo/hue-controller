@@ -102,7 +102,7 @@ function creerSqueletteSiBesoin() {
       </div>
       <div class="bloc ligne"><span>Lancer à l'ouverture de session</span><button class="inter" role="switch" aria-checked="false" aria-label="Lancer à l'ouverture de session" data-demarrage></button></div>
       <button type="button" class="quitter">Quitter Hue Controller</button>
-      <div class="bas"><button type="button" class="termine">Terminé</button></div>
+      <div class="bas"><span class="auteur">Application créée par Anthony Hamo</span><button type="button" class="termine">Terminé</button></div>
     </div>`;
   preparerReglages();
   groupe = racine.querySelector(".groupe");
