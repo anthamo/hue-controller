@@ -1,6 +1,6 @@
 # PLAN : Hue Controller
 
-Écrit le 12/11/2026. Chaque tâche est faite pour être confiée telle quelle à un modèle moins coûteux : elle dit quels fichiers, quel contrat, comment vérifier. Si l'exécutant doit deviner, c'est le plan qui est en tort : il s'arrête et le dit.
+Le plan qui a servi à construire l'app, tranche par tranche. Chaque tâche est faite pour être confiée telle quelle à un modèle moins coûteux : elle dit quels fichiers, quel contrat, comment vérifier. Si l'exécutant doit deviner, c'est le plan qui est en tort : il s'arrête et le dit.
 
 ## Règles pour l'exécutant
 
@@ -22,43 +22,43 @@
 | 1.4 | **Réglages.** `charger() -> dict ou None`, `enregistrer(reglages)` (fichier en mode 600, dossier créé au besoin), `CHEMIN`. Une commande `python -m hue_controller.reglages --depuis <fichier .env>` qui lit `HUE_BRIDGE_IP` et `HUE_APP_KEY` et écrit le fichier **sans jamais afficher les valeurs**. Le chemin se remplace dans les tests. | `hue_controller/reglages.py`, `tests/test_reglages.py` | aller-retour dans un dossier temporaire ; fichier absent rend `None` ; mode du fichier = 600 |
 | 1.5 | **La page.** À partir de la maquette : en-tête (nom, phrase d'état, interrupteur), tuiles des scènes. Pas d'onglets ni de curseur dans cette tranche (ils arrivent avec ce qu'ils commandent). `panneau.js` expose `window.recevoir(etat)` et envoie les messages par `envoyer(message)` ; sans `window.webkit`, il charge `faux.js`, qui répond avec un état figé et applique scène et interrupteur en mémoire. États `"erreur"` et `"reglages"` : la phrase du message à la place de la phrase d'état, contrôles désactivés. Fond de page transparent ; dans un navigateur, un fond de démonstration. | `hue_controller/panneau/index.html`, `panneau.css`, `panneau.js`, `faux.js` | ouvrir `index.html` dans un navigateur : 22 tuiles, un clic déplace l'anneau et change la phrase d'état, l'interrupteur éteint tout ; aucune erreur dans la console |
 | 1.6 | **L'app.** À partir de `essais/panneau.py` : icône, panneau de 360 × 600, page chargée depuis les fichiers. Un fil de travail lit une file d'ordres ; les messages `pret`, `scene`, `piece.on` y sont posés après contrôle (identifiant connu, décision 8). Lecture de l'état au lancement, à chaque ouverture du panneau, et 0,6 s après un ordre. Le dernier état connu est renvoyé tout de suite à l'ouverture. Sans réglages : état `"reglages"`. La logique (contrôle des messages, traduction en ordres pour le bridge) est dans des fonctions sans AppKit, testées. | `hue_controller/app.py`, `hue_controller/__main__.py`, `tests/test_app.py` | tests : un message avec un identifiant inconnu est refusé ; `scene` devient `PUT scene/<id> {"recall": {"action": "active"}}` ; `piece.on` devient `PUT grouped_light/<id> {"on": {"on": …}}` |
-| 1.7 | **Revue et essai réel.** Relecture du code contre ce plan et l'architecture (modèle le plus capable). Puis, avec le oui d'Antho : copier les réglages, lancer, cliquer une scène. | | Antho change d'ambiance depuis le Mac |
+| 1.7 | **Revue et essai réel.** Relecture du code contre ce plan et l'architecture (modèle le plus capable). Puis, sur les vraies lampes : copier les réglages, lancer, cliquer une scène. | | on change d'ambiance depuis le Mac |
 
 Ordre : 1.1 à 1.4 sont indépendantes ; 1.5 ne dépend que du contrat ; 1.6 vient en dernier.
 
 ## Tranche 2 : l'intensité de la pièce, l'état qui se rafraîchit
 
-Limites du bridge, vérifiées le 12/11/2026 : environ 10 ordres par seconde vers une lampe, 1 par seconde vers un groupe (consigne officielle de Hue pour l'ancienne API ; reprise par des sources secondaires pour la nouvelle).
+Limites du bridge : environ 10 ordres par seconde vers une lampe, 1 par seconde vers un groupe (consigne officielle de Hue pour l'ancienne API ; reprise par des sources secondaires pour la nouvelle).
 
 | # | Tâche | Fichiers | Vérification |
 | --- | --- | --- | --- |
 | 2.1 | **Ordres et cadence.** `traduire` accepte `{"action": "piece", "intensite": n}` (nombre de 1 à 100, pas un booléen ; hors bornes : refusé) et rend `("grouped_light", id_groupe, {"dimming": {"brightness": n}})`. Nouvelle classe `Cadence`, sans horloge propre : `poser(ordre)` remplace l'ordre en attente pour la même cible (même ressource, même id, mêmes clés du corps) ; `prochain(maintenant)` rend `(ordre, 0)` si un ordre peut partir, sinon `(None, secondes à attendre)` ou `(None, None)` s'il n'y a rien ; un ordre parti est noté pour sa ressource. Intervalles : 1 s pour `grouped_light`, 0,1 s pour `light`, 0 pour `scene`. Le premier ordre part tout de suite. | `hue_controller/ordres.py`, `tests/test_ordres.py` | dix intensités posées d'affilée : la première part, puis seule la dernière, une seconde après ; une scène posée entre-temps part sans attendre |
 | 2.2 | **Le fil de travail suit la cadence.** `Travail` n'empile plus les écritures : il les pose dans une `Cadence` et sa boucle envoie ce qui peut partir, relit le vif 0,6 s après le dernier ordre parti (une seule relecture, pas une par ordre), et, tant que le panneau est ouvert, relit le vif toutes les 5 s. L'app lui dit quand le panneau s'ouvre et se ferme. La boucle dort jusqu'à la prochaine échéance ou jusqu'à ce qu'on la réveille (`threading.Condition`), elle ne tourne pas à vide. | `hue_controller/app.py` | `--essai` : panneau ouvert, page prête, connexion ok |
 | 2.3 | **Le curseur.** Sous l'en-tête, le curseur d'intensité de la pièce et sa valeur (`.groupe` de la maquette). Désactivé quand la pièce est éteinte. Pendant le geste : la valeur affichée suit, et `envoyer({action: "piece", intensite})` à chaque mouvement. L'état reçu ne touche pas au curseur tant qu'on le tient, ni pendant 1,5 s après le dernier mouvement (décision 7). `faux.js` applique l'intensité à la pièce et aux lampes allumées. | `hue_controller/panneau/panneau.js`, `panneau.css`, `faux.js` | dans un navigateur : tirer le curseur change la valeur ; il ne saute pas quand l'état revient ; éteint, il est grisé |
-| 2.4 | **Revue et essai réel**, avec le oui d'Antho. | | Antho baisse la lumière depuis le Mac |
+| 2.4 | **Revue et essai réel**, sur les vraies lampes. | | on baisse la lumière depuis le Mac |
 
 ## Tranche 3 : les onglets, les lampes une par une
 
-Tranche 2 essayée par Antho le 12/11 ; depuis, la page a changé à sa demande (curseur sur le modèle du système, carte « Scène actuelle », scène en cours marquée dans la liste) : `DESIGN.md` fait foi.
+Après l'essai de la tranche 2, la page a changé (curseur sur le modèle du système, carte « Scène actuelle », scène en cours marquée dans la liste) : `DESIGN.md` fait foi.
 
 | # | Tâche | Fichiers | Vérification |
 | --- | --- | --- | --- |
 | 3.1 | **Ordres pour une lampe.** `traduire` accepte `{"action": "lampe", "id": X, "on": bool}` et `{"action": "lampe", "id": X, "intensite": n}` (1 à 100, pas un booléen), X présent dans `etat_courant["lampes"]` ; rend `("light", X, {"on": {"on": bool}})` ou `("light", X, {"dimming": {"brightness": n}})`. Refusé : id inconnu, `on` et `intensite` ensemble, mauvais type, hors bornes. | `hue_controller/ordres.py`, `tests/test_ordres.py` | les cas ci-dessus ; avec `Cadence`, deux lampes différentes partent à 0,1 s d'écart |
 | 3.2 | **Onglets et liste des lampes.** Sous le curseur de la pièce, deux onglets : « Scènes » (ouvert au départ : la carte Scène actuelle et les tuiles, inchangées) et « Lampes ». L'onglet choisi est gardé tant que l'app tourne. Onglet Lampes : pour chaque zone, dans l'ordre où elles arrivent dans `etat.lampes`, un titre (le nom de la zone) puis une carte qui contient ses lampes, une ligne par lampe séparée de la suivante par un filet. Une ligne, toujours dans cet ordre : pastille à la couleur de la lampe (vide si éteinte), nom (coupé par des points de suspension s'il est trop long, grisé si éteinte), curseur d'intensité, interrupteur. Le curseur d'une lampe a le dessin du curseur de la pièce, rempli de la couleur de la lampe au lieu de la couleur d'accent ; désactivé si la lampe est éteinte. Gestes : `envoyer({action: "lampe", id, on})` et `envoyer({action: "lampe", id, intensite})`, affichés tout de suite (pastille, nom grisé, phrase d'état et interrupteur général de l'en-tête recomptés). Décision 7 pour chaque curseur de lampe : les lignes sont créées une fois (tant que la liste des identifiants ne change pas) puis mises à jour en place ; un curseur tenu, ou touché depuis moins de 1,5 s, ignore l'état reçu. `faux.js` applique ces deux gestes, recompte la pièce, et une lampe changée à la main désactive la scène en cours. | `hue_controller/panneau/panneau.js`, `panneau.css`, `faux.js` | dans un navigateur : changer d'onglet ; éteindre une lampe change la phrase de l'en-tête ; un curseur de lampe tenu ne saute pas quand l'état revient ; trois titres de zone |
-| 3.3 | **Revue et essai réel**, avec le oui d'Antho. | | Antho éteint une lampe et en baisse une autre depuis le Mac |
+| 3.3 | **Revue et essai réel**, sur les vraies lampes. | | on éteint une lampe et on en baisse une autre depuis le Mac |
 
 ## Tranche 4 : le blanc et la couleur de chaque lampe
 
-Tranche 3 essayée par Antho le 12/11 ; refaite à sa demande en cartes dépliables, avec « Tout éteindre » par zone. Cadence vers une lampe ramenée à quatre ordres par seconde, avec un fondu de 200 ms.
+Après l'essai de la tranche 3, la liste a été refaite en cartes dépliables, avec « Tout éteindre » par zone. Cadence vers une lampe ramenée à quatre ordres par seconde, avec un fondu de 200 ms.
 
 | # | Tâche | Fichiers | Vérification |
 | --- | --- | --- | --- |
 | 4.1 | **Conversions et état.** `couleurs.teinte_vers_hex(degres)` (teinte pleine, la même formule que `deTeinte` de la maquette) et `couleurs.hex_vers_xy(hex)` (inverse de `xy_vers_hex` : gamma sRGB inverse, puis matrice inverse « Wide RGB D65 » de Hue : X = r·0.664511 + g·0.154324 + b·0.162028 ; Y = r·0.283881 + g·0.668433 + b·0.047685 ; Z = r·0.000088 + g·0.072310 + b·0.986039 ; x = X/(X+Y+Z), y = Y/(X+Y+Z) ; noir : (0.3127, 0.3290)). Dans l'état, chaque lampe qui a « blanc » dans `reglages` reçoit `"kelvins": [mini, maxi]` (entiers, tirés de `color_temperature.mirek_schema` : mini = 1e6 / mirek_maximum, maxi = 1e6 / mirek_minimum) ; les autres `"kelvins": null`. | `hue_controller/couleurs.py`, `hue_controller/etat.py`, leurs tests | aller-retour hex → xy → hex à une unité près par canal sur six couleurs vives ; sur les données : 10 lampes avec `kelvins` (2000 à 6535), « Plafond cuisine » à `null` |
 | 4.2 | **Ordres.** `traduire` accepte `{"action": "lampe", "id", "kelvin": n}` (lampe avec « blanc », n dans ses `kelvins`) → `("light", id, {"color_temperature": {"mirek": round(1e6 / n)}, "dynamics": {"duration": FONDU_MS}})`, et `{"action": "lampe", "id", "teinte": d}` (lampe avec « teinte », 0 ≤ d ≤ 360) → `("light", id, {"color": {"xy": {"x": …, "y": …}}, "dynamics": {"duration": FONDU_MS}})` avec x et y arrondis à 4 décimales. Un seul champ d'action par message. | `hue_controller/ordres.py`, `tests/test_ordres.py` | chaque cas, dont une lampe sans le réglage demandé |
 | 4.3 | **La page.** Dans le dépli d'une lampe, sous Luminosité : une ligne « Blanc » et une ligne « Couleur », chacune avec son curseur sur toute la largeur, seulement pour une lampe qui a le réglage. Même dessin de curseur ; la piste de Blanc est un dégradé du chaud au froid, celle de Couleur l'arc-en-ciel des teintes (ceux de la maquette). La poignée du réglage en cours (`lampe.mode`) est remplie de la couleur de la lampe. Pendant le geste : `envoyer` à chaque mouvement ; le halo, la poignée et la ligne d'état (« · Blanc chaud », « · Couleur ») suivent tout de suite (seul endroit où la page calcule une couleur : fonctions `deTeinte` et `deBlanc` de la maquette). Désactivés si la lampe est éteinte. Décision 7 pour chacun. `faux.js` applique `kelvin` et `teinte`. | `hue_controller/panneau/panneau.js`, `panneau.css`, `faux.js` | dans un navigateur : tirer Couleur change le halo ; passer de Couleur à Blanc change la ligne d'état ; « Plafond cuisine » n'a que Luminosité |
-| 4.4 | **Revue et essai réel**, avec le oui d'Antho. La justesse des couleurs se juge à l'œil. | | Antho met une lampe en bleu puis en blanc chaud depuis le Mac |
+| 4.4 | **Revue et essai réel**, sur les vraies lampes. La justesse des couleurs se juge à l'œil. | | on met une lampe en bleu puis en blanc chaud depuis le Mac |
 
-**Changé à l'essai (12/11)** : sur une lampe de couleur, Antho remplace Blanc par Saturation ; Blanc ne reste que pour une lampe blanche. La couleur est donc un couple (teinte, saturation), envoyé ensemble. `ARCHITECTURE.md` (contrat) et `DESIGN.md` font foi.
+**Changé à l'essai** : la couleur devient un couple (teinte, saturation), envoyé ensemble et réglé sur une roue chromatique ; le blanc reste pour toute lampe qui l'a, dans un segment à part. `ARCHITECTURE.md` (contrat) et `DESIGN.md` font foi.
 
 ## Tranche 5 : les réglages, le lancement automatique, l'installation
 
@@ -68,30 +68,21 @@ Tranche 3 essayée par Antho le 12/11 ; refaite à sa demande en cartes dépliab
 | 5.2 | **L'app.** `reglages.adresse_valide(texte) -> str ou None` (adresse IPv4 privée ou nom d'hôte simple, espaces retirés). Dans `app.py` : les messages `reglages`, `demarrage`, `quitter` (contrat) ; `Travail.arreter()` et redémarrage quand l'adresse change ; verrou d'instance unique (décision 15). | `hue_controller/reglages.py`, `hue_controller/app.py`, tests | tests de `adresse_valide` ; `--essai` : connexion ok |
 | 5.3 | **La page.** La roue dentée et la vue Réglages (DESIGN, point 6). `faux.js` simule les trois messages. | `hue_controller/panneau/panneau.js`, `panneau.css`, `faux.js` | dans un navigateur : ouvrir, changer l'adresse fait apparaître « Enregistrer », l'interrupteur bascule, « Terminé » revient |
 | 5.4 | **Installer sur un autre Mac.** `installer.sh` : vérifie `uv`, prépare l'environnement, dit où copier les réglages, active le lancement automatique, lance l'app. README à jour. | `installer.sh`, `README.md` | relecture ; non essayé sur un autre Mac |
-| 5.5 | **Revue et essai réel**, avec le oui d'Antho. | | |
+| 5.5 | **Revue et essai réel**, sur les vraies lampes. | | |
 
-## Reste à faire (au 13/11/2026)
+## État
 
-Les cinq tranches sont faites. Essayés par Antho le 13/11 et validés : le changement de pièce depuis le sélecteur (pièce retenue à la relance), le clic sur le lien de signature, le mode sombre dans le vrai panneau.
+Les cinq tranches sont faites. Ajouté depuis, à l'usage : le choix de la pièce en bas du panneau, le mode sombre, la couleur qui suit la luminosité, « Blanc fixe », le retour aux scènes à la fermeture, l'icône (`outils/icone.py` la fabrique depuis `design/icone/`). `DESIGN.md` fait foi.
 
-Ce qui n'a jamais été essayé en vrai :
+Jamais essayé en vrai :
 
 - l'installation sur un second Mac, et l'appairage avec un bridge (il n'a tourné que sur des faux) ;
 - le fond du panneau sur un macOS d'avant la version 26.
 
-Fait le 13/11 et validé par Antho dans le vrai panneau :
+Écartés :
 
-- « Blanc fixe » sur la ligne des lampes qui n'ont que l'intensité ;
-- le halo, la roue chromatique et la piste de température s'assombrissent avec la luminosité de la lampe ;
-- le panneau se rouvre toujours sur les scènes : à sa fermeture, retour à l'onglet Scènes, réglages et carte de lampe refermés.
-
-Écarté le 13/11 : chercher le bridge sur le réseau local (mDNS). Antho préfère garder le seul annuaire en ligne de Philips, plus simple (une requête, une réponse JSON) ; à défaut, `--adresse`.
-
-**Icône** (13/11) : Antho a fourni deux versions, `design/icone/sombre.png` et `claire.png`. `outils/icone.py` en fait `hue_controller/AppIcon.icns` (centre de l'image, forme arrondie de 824 px, coins transparents), que `demarrage.installer_app()` copie dans le lanceur. Version sombre retenue. Un .icns ne porte qu'une image : basculer seul entre clair et sombre demande le format d'Icon Composer, compilé par Xcode (non installé : seulement les outils en ligne de commande).
-
-Ce qui reste à faire : rien hors des essais ci-dessus.
-
-Écarté le 13/11 : souligner en permanence le lien de signature (Antho : pas besoin).
+- chercher le bridge sur le réseau local (mDNS) : l'annuaire en ligne de Philips suffit (une requête, une réponse JSON) ; à défaut, `--adresse` ;
+- une icône qui passe seule du clair au sombre : un .icns ne porte qu'une image, il faudrait le format d'Icon Composer, compilé par Xcode.
 
 ## Qui fait quoi
 

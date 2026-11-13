@@ -1,12 +1,12 @@
 # ARCHITECTURE : Hue Controller
 
-Écrit le 12/11/2026, après l'essai de faisabilité (`essais/panneau.py`). À lire avec `PRD.md` (quoi, pourquoi) et `DESIGN.md` (à quoi ça ressemble). `PLAN.md` découpe le travail.
+Écrit après l'essai de faisabilité (`essais/panneau.py`). À lire avec `PRD.md` (quoi, pourquoi) et `DESIGN.md` (à quoi ça ressemble). `PLAN.md` découpe le travail.
 
 ## Ce que l'essai a prouvé
 
 `uv run essais/panneau.py --essai` : une icône dans la barre de menus, un panneau accroché dessous, une page HTML dedans, un message de la page vers Python et un de Python vers la page. PyObjC pèse 31 Mo installé. La page est transparente : le fond translucide du panneau natif passe au travers, ce qui donne la direction Natif sans rien dessiner.
 
-**Corrigé le même jour, à l'usage** : le panneau standard (`NSPopover`) a un fond presque opaque et ne ressemble pas aux panneaux du système. L'app utilise à la place une fenêtre sans bord avec le fond en verre de macOS 26 (`essais/verre.py`), placée sous l'icône, qui se referme au clic ailleurs et ne prend pas la main à l'app en cours.
+**Corrigé à l'usage** : le panneau standard (`NSPopover`) a un fond presque opaque et ne ressemble pas aux panneaux du système. L'app utilise à la place une fenêtre sans bord avec le fond en verre de macOS 26 (`essais/verre.py`), placée sous l'icône, qui se referme au clic ailleurs et ne prend pas la main à l'app en cours.
 
 ## Vue d'ensemble
 
@@ -64,14 +64,14 @@ C'est la frontière la plus importante : la page et Python peuvent être écrits
 | `{action: "reglages", bridge_ip}` | changer l'adresse du bridge | 5 |
 | `{action: "demarrage", on}` | lancer ou non l'app à l'ouverture de session | 5 |
 | `{action: "quitter"}` | arrêter l'app | 5 |
-| `{action: "changer_piece", nom}` | piloter une autre pièce du bridge ; elle est gardée dans les réglages et revient à la prochaine ouverture | ajouté le 12/11 |
+| `{action: "changer_piece", nom}` | piloter une autre pièce du bridge ; elle est gardée dans les réglages et revient à la prochaine ouverture | après la tranche 5 |
 
 **Python répond** en appelant `window.recevoir(etat)` :
 
 ```json
 {
   "connexion": "ok",
-  "piece": { "nom": "Séjour", "on": true, "intensite": 53, "allumees": 10, "total": 11 },
+  "piece": { "nom": "Salon", "on": true, "intensite": 53, "allumees": 10, "total": 11 },
   "scenes": [
     { "id": "…", "nom": "Détente", "couleurs": ["#ffc991"], "intensite": 56, "active": false }
   ],
@@ -86,25 +86,25 @@ Aux messages de réglages, Python répond par `window.reglages({"bridge_ip": "19
 
 - `connexion` vaut `"ok"`, `"erreur"` (le bridge ne répond pas) ou `"reglages"` (pas de fichier de réglages). Hors `"ok"`, un champ `message` porte la phrase à afficher et les listes sont vides.
 - Toutes les couleurs sont déjà des couleurs d'écran (`#rrggbb`). La page n'en calcule aucune, sauf pendant qu'on tire un curseur.
-- `zones` (ajouté le 12/11) : `[{"id": "…", "nom": "Salon", "allumees": 6, "total": 6}]`, une entrée par zone du bridge qui contient au moins une lampe de la pièce, dans l'ordre du bridge. `id` est celui du groupe de lampes de la zone : c'est lui qu'on commande.
-- Lampe de couleur (ajouté le 12/11) : `teinte` (0 à 360) et `saturation` (0 à 100) sont toujours donnés, calculés depuis la couleur que la lampe rapporte, quel que soit son mode. La couleur d'écran d'un couple (teinte, saturation) est celle de même teinte, à cette saturation et à pleine clarté. `kelvins` : `[mini, maxi]` pour une lampe qui a le blanc, sinon `null`.
-- `pieces` (ajouté le 12/11) : les noms de toutes les pièces du bridge, dans l'ordre du bridge. La page n'affiche le sélecteur de pièce que s'il y en a plus d'une.
+- `zones` : `[{"id": "…", "nom": "Salon", "allumees": 6, "total": 6}]`, une entrée par zone du bridge qui contient au moins une lampe de la pièce, dans l'ordre du bridge. `id` est celui du groupe de lampes de la zone : c'est lui qu'on commande.
+- Lampe de couleur : `teinte` (0 à 360) et `saturation` (0 à 100) sont toujours donnés, calculés depuis la couleur que la lampe rapporte, quel que soit son mode. La couleur d'écran d'un couple (teinte, saturation) est celle de même teinte, à cette saturation et à pleine clarté. `kelvins` : `[mini, maxi]` pour une lampe qui a le blanc, sinon `null`.
+- `pieces` : les noms de toutes les pièces du bridge, dans l'ordre du bridge. La page n'affiche le sélecteur de pièce que s'il y en a plus d'une.
 - `scenes[].couleurs` : cinq au plus, triées par teinte. `lampes` : dans l'ordre des zones.
 - Les noms viennent toujours du bridge.
 
 ## Décisions, et pourquoi
 
 1. **Les couleurs se calculent en Python, pas dans la page.** Une seule source, testable. La maquette les calculait en JavaScript : ces fonctions sont portées dans `couleurs.py`.
-2. **Jamais de réseau sur le fil principal.** Un appel au bridge qui traîne gèlerait le panneau. Tout ordre passe par une file, lue par un seul fil de travail ; le résultat revient sur le fil principal (`AppHelper.callAfter`). Même forme que `standard.py` du téléphone.
+2. **Jamais de réseau sur le fil principal.** Un appel au bridge qui traîne gèlerait le panneau. Tout ordre passe par une file, lue par un seul fil de travail ; le résultat revient sur le fil principal (`AppHelper.callAfter`).
 3. **Une connexion gardée ouverte.** Chaque lecture coûtait 120 à 210 ms avec une connexion neuve, dont une bonne part pour l'ouvrir. Lire l'état demande plusieurs ressources : le fil de travail garde une connexion (`http.client`) et la rouvre une fois si elle tombe.
 4. **À l'ouverture, on montre d'abord le dernier état connu, puis on corrige.** Le panneau n'attend jamais le bridge pour s'afficher. La condition de succès du PRD (« état réel en moins d'une demi-seconde ») se mesure sur la correction.
 5. **Ce qui ne change pas se lit une fois.** Pièces, zones et appareils (les noms, qui est où) sont lus au lancement et relus toutes les dix minutes. À l'ouverture du panneau, puis toutes les cinq secondes tant qu'il est ouvert, et 0,6 s après chaque ordre : seulement les lampes, les scènes et le groupe.
-6. **Pendant qu'on tire un curseur, seul le dernier ordre compte.** Un seul ordre en attente par cible. Un ordre par seconde vers la pièce (consigne de Hue pour un groupe). Vers une lampe : quatre par seconde, avec un fondu de 200 ms. Le bridge en accepte dix, mais les lampes ne suivent pas : les ordres s'empilent et la lampe rejoue le geste en retard (constaté le 12/11/2026 ; le bridge lui-même répond en 28 ms).
+6. **Pendant qu'on tire un curseur, seul le dernier ordre compte.** Un seul ordre en attente par cible. Un ordre par seconde vers la pièce (consigne de Hue pour un groupe). Vers une lampe : quatre par seconde, avec un fondu de 200 ms. Le bridge en accepte dix, mais les lampes ne suivent pas : les ordres s'empilent et la lampe rejoue le geste en retard (constaté à l'essai ; le bridge lui-même répond en 28 ms).
 7. **La page affiche tout de suite le geste, sans attendre le bridge**, et ignore l'état reçu pour le contrôle qu'on est en train de manipuler. Sinon le curseur saute sous le doigt.
 8. **La page ne peut agir que sur la pièce en cours.** Python refuse tout identifiant qui n'est pas dans le dernier état construit, et borne chaque valeur (1 à 100, 2000 à 6500, 0 à 360). Changer de pièce ne se fait que par le message `changer_piece`, avec un nom présent dans `pieces`.
-9. **Réglages dans `~/Library/Application Support/hue-controller/reglages.json`**, lisible par le seul utilisateur : `bridge_ip`, `cle`, `piece` (« Séjour »). Hors du dépôt. Pour un second Mac : copier ce fichier. Pas d'appairage dans l'app (PRD). **Première connexion** (`appairage.py`, ajouté le 12/11 pour que l'app s'installe ailleurs que chez son auteur) : la commande cherche le bridge par l'annuaire de Philips Hue (seule méthode, choix d'Antho le 13/11 : pas de recherche mDNS sur le réseau local ; sinon `--adresse`), attend l'appui sur son bouton, obtient une clé, fait choisir la pièce et écrit ce fichier. Elle n'a pas été essayée sur un vrai bridge.
-10. **Le certificat du bridge n'est pas vérifié**, comme dans le téléphone : il est signé par Signify, pas par une autorité connue du Mac, et tout reste sur le réseau de la maison. Amélioration possible plus tard : n'accepter que l'autorité de Signify.
-11. **Travailler sans toucher aux lampes.** Ouverte dans un navigateur, la page ne trouve pas le Mac derrière elle et charge `faux.js` : un faux bridge qui répond avec un état figé et applique les gestes en mémoire. Tout le travail d'interface se fait là. Les tests Python utilisent un faux transport. **Aucun ordre ne part vers les vraies lampes sans le oui d'Antho juste avant.**
+9. **Réglages dans `~/Library/Application Support/hue-controller/reglages.json`**, lisible par le seul utilisateur : `bridge_ip`, `cle`, `piece` (le nom de la pièce). Hors du dépôt. Pour un second Mac : copier ce fichier. Pas d'appairage dans l'app (PRD). **Première connexion** (`appairage.py`) : la commande cherche le bridge par l'annuaire de Philips Hue (seule méthode : une requête, une réponse JSON ; pas de recherche mDNS sur le réseau local ; à défaut, `--adresse`), attend l'appui sur son bouton, obtient une clé, fait choisir la pièce et écrit ce fichier. Elle n'a pas été essayée sur un vrai bridge.
+10. **Le certificat du bridge n'est pas vérifié** : il est signé par Signify, pas par une autorité connue du Mac, et tout reste sur le réseau de la maison. Amélioration possible plus tard : n'accepter que l'autorité de Signify.
+11. **Travailler sans toucher aux lampes.** Ouverte dans un navigateur, la page ne trouve pas le Mac derrière elle et charge `faux.js` : un faux bridge qui répond avec un état figé et applique les gestes en mémoire. Tout le travail d'interface se fait là. Les tests Python utilisent un faux transport. **Pendant le développement, aucun ordre ne part vers les vraies lampes sans qu'on l'ait décidé** : un essai qui allume ou éteint se fait exprès, quand personne n'en est gêné dans la maison.
 12. **Tests avec `unittest`**, sans dépendance de plus : `uv run python -m unittest`.
 13. **Lancement** : `uv run python -m hue_controller`, depuis le dossier du projet. Pour l'ouvrir comme une autre app (Spotlight, Launchpad), `demarrage.installer_app()` crée dans `~/Applications` un lanceur « Hue Controller.app » : un dossier d'application dont le programme est un script de deux lignes qui lance cette commande. Le code n'est pas copié dedans : le lanceur pointe vers le dossier du projet. Seule l'icône y est copiée (`hue_controller/AppIcon.icns`, fabriquée par `outils/icone.py` depuis `design/icone/`) ; après un changement d'icône, refaire le lanceur.
 14. **Lancement à l'ouverture de session** : un fichier `~/Library/LaunchAgents/fr.hue-controller.plist` que l'app écrit ou supprime (`demarrage.py`). Il lance `uv run` avec le chemin complet de `uv` et celui du projet. Rien d'autre n'est installé dans le système.
@@ -117,7 +117,6 @@ Aux messages de réglages, Python répond par `window.reglages({"bridge_ip": "19
 | --- | --- |
 | La transparence de la page repose sur un réglage non documenté de WebKit (`drawsBackground`) | Si une mise à jour de macOS le casse : fond uni de la couleur du panneau, une ligne à changer |
 | Le verre (`NSGlassEffectView`) n'existe que sur macOS 26 | Repli écrit sur le flou des versions d'avant (`NSVisualEffectView`), **jamais essayé** : à vérifier sur le second Mac du foyer avant d'y installer l'app |
-| 22 scènes + 11 lampes dans 360 px : le panneau défile | Accepté (DESIGN). Hauteur du panneau fixe |
+| Une vingtaine de scènes et une dizaine de lampes dans 360 px : le panneau défile | Accepté (DESIGN). Hauteur du panneau fixe |
 | L'ombre de la fenêtre dessinait un cadre gris dans les coins arrondis | La fenêtre n'a plus d'ombre propre et dépasse le panneau de 32 px : l'ombre est celle du verre, qui s'éteint dans cette marge |
-| La clé du bridge est partagée avec le téléphone | Si on la révoque, les deux tombent. Accepté |
 | Mode sombre de macOS | Le panneau suit l'apparence du système : le verre s'assombrit seul, la page change ses couleurs (`data-theme` posé par `panneau.js`) |

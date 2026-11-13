@@ -1,4 +1,4 @@
-"""Essai de faisabilité (12/11/2026) : une icône dans la barre de menus, un panneau accroché dessous,
+"""Essai de faisabilité : une icône dans la barre de menus, un panneau accroché dessous,
 une page HTML dedans, et un aller-retour entre la page et Python.
 
     uv run essais/panneau.py            # l'icône reste, cliquer dessus ; Ctrl-C pour arrêter

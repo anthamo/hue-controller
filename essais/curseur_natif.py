@@ -1,4 +1,4 @@
-"""Essai (12/11/2026) : le curseur de la page (dessiné par WebKit) face au vrai curseur du Mac (NSSlider),
+"""Essai : le curseur de la page (dessiné par WebKit) face au vrai curseur du Mac (NSSlider),
 posé par-dessus la page. Question : lequel a le rendu du système, sur ce macOS et sur un plus ancien ?
 
     uv run essais/curseur_natif.py [fichier.png]   # ouvre 3 s ; avec un fichier, capture la fenêtre seule

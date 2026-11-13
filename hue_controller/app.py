@@ -272,7 +272,7 @@ class App(NSObject):
         self.panneau.setOpaque_(False)
         self.panneau.setBackgroundColor_(NSColor.clearColor())
         # Pas d'ombre de fenêtre : macOS la dessinait sur le rectangle de la fenêtre, d'où un cadre gris et un fond dans
-        # les coins arrondis (vu par Antho le 12/11/2026). L'ombre est celle du panneau lui-même, dans la marge.
+        # les coins arrondis. L'ombre est celle du panneau lui-même, dans la marge.
         self.panneau.setHasShadow_(False)
         self.panneau.setLevel_(NSPopUpMenuWindowLevel)
         cadre = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, LARGEUR + 2 * MARGE, HAUTEUR + 2 * MARGE))
@@ -328,7 +328,7 @@ class App(NSObject):
 
     @objc.python_method
     def donner_accent(self):
-        """Relue à chaque ouverture : si Antho change la couleur d'accent du Mac, le panneau suit sans relancer l'app."""
+        """Relue à chaque ouverture : si la couleur d'accent du Mac change, le panneau suit sans relancer l'app."""
         if self.page_prete:
             self.page.evaluateJavaScript_completionHandler_(f"window.accent({json.dumps(accent_du_mac())})", None)
 

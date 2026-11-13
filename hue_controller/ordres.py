@@ -81,7 +81,7 @@ def traduire(message, etat_courant, id_groupe):
         if champ == "kelvin":
             kelvins = lampe.get("kelvins")
             # Toute lampe qui a le blanc : une lampe de couleur passe de la couleur au blanc par un sélecteur dans son
-            # dépli, et règle alors sa chaleur (Antho, 12/11 : les deux réglages ne sont jamais montrés ensemble).
+            # dépli, et règle alors sa chaleur (les deux réglages ne sont jamais montrés ensemble).
             if "blanc" in reglages and kelvins and kelvins[0] <= valeur <= kelvins[1]:
                 return ("light", identifiant, {"color_temperature": {"mirek": round(1e6 / valeur)}, "dynamics": {"duration": FONDU_MS}})
     elif action == "zone":
@@ -98,7 +98,7 @@ class Cadence:
     """Les ordres en attente, et à quel moment chacun peut partir. Sans horloge : l'heure est passée en argument."""
 
     # Lampes : le bridge accepte 10 ordres par seconde, mais les lampes (radio Zigbee) ne suivent pas : les ordres
-    # s'empilent et la lampe rejoue le geste avec du retard (vu par Antho le 12/11/2026). Quatre par seconde au plus.
+    # s'empilent et la lampe rejoue le geste avec du retard (constaté à l'essai). Quatre par seconde au plus.
     INTERVALLES = {"grouped_light": 1.0, "light": 0.25, "scene": 0.0}
 
     def __init__(self):

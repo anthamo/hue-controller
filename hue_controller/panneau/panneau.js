@@ -53,7 +53,7 @@ let curseur = null, valeur = null, groupe = null;
 let tenu = false, dernierGeste = 0;
 
 // Un curseur ignore l'état reçu pendant 1,5 s après un geste. Sans rattrapage, la relecture qui suit l'ordre tombe dans
-// cette fenêtre et l'affichage ne se corrige qu'au rafraîchissement suivant, 3 ou 4 s plus tard (vu par Antho, 12/11).
+// cette fenêtre et l'affichage ne se corrige qu'au rafraîchissement suivant, 3 ou 4 s plus tard.
 let rattrapage = null;
 function rattraper() {
   clearTimeout(rattrapage);
@@ -412,7 +412,7 @@ function majLignes() {
     const garde = g.tenu || Date.now() - g.dernierGeste < 1500;
     const v = garde ? Math.round(Number(g.curseur.value)) : Math.min(100, Math.max(1, Math.round(l.intensite) || 1));
     // Le halo, la roue, la piste de température et leurs repères s'assombrissent avec la luminosité,
-    // pendant le geste comme après (demande d'Antho, 13/11).
+    // pendant le geste comme après.
     const f = facteurLum(v);
     g.el.style.setProperty("--voile", (1 - f).toFixed(3));
     g.el.classList.toggle("eteinte", !allumee);
@@ -514,7 +514,7 @@ function dessiner(force) {
 window.accent = couleur => racine.style.setProperty("--inter-on", couleur);
 
 // Le panneau vient de se refermer (clic ailleurs, ou sur l'icône) : la prochaine ouverture montre les scènes, en haut,
-// sans réglages, sans carte de lampe dépliée, sans liste des pièces ouverte (demande d'Antho, 13/11).
+// sans réglages, sans carte de lampe dépliée, sans liste des pièces ouverte.
 // Appelé pendant que le panneau est caché : rien ne bouge sous les yeux.
 window.revenir = function () {
   onglet = "scenes";

@@ -33,19 +33,19 @@ html[data-theme="sombre"] .natif { color-scheme: dark;
 .scene { display: flex; align-items: center; gap: 8px; height: 48px; padding: 8px; border-radius: 8px; border: 0; background: var(--tuile); box-shadow: 0 1px 2px rgba(0,0,0,.06); color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .scene i { flex: none; width: 32px; height: 32px; border-radius: 6px; background: var(--g); opacity: calc(.5 + var(--o) / 2); }
 .scene span { font-size: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-/* Au survol : le fond s'éclaircit et l'échantillon grossit un peu, avec une lueur de sa couleur (demande d'Antho, 12/11). */
+/* Au survol : le fond s'éclaircit et l'échantillon grossit un peu, avec une lueur de sa couleur. */
 .scene { transition: background .12s; }
 .scene i { transition: transform .12s, box-shadow .12s; }
 .scene:hover { background: var(--avant); }
 .scene:hover i { transform: scale(1.12); box-shadow: 0 2px 8px color-mix(in srgb, var(--a) 50%, transparent); }
-/* Dans la liste, la scène en cours : fond blanc, anneau à sa propre couleur, coche posée sur l'échantillon
-   (demande d'Antho, 12/11). Ni gras ni coche à droite : ils coupaient « Coucher de soleil sur la savane ». */
+/* Dans la liste, la scène en cours : fond blanc, anneau à sa propre couleur, coche posée sur l'échantillon.
+   Ni gras ni coche à droite : ils coupaient les noms longs (« Coucher de soleil sur la savane »). */
 .scene { position: relative; }
 .scene[aria-pressed="true"] { background: var(--avant); box-shadow: inset 0 0 0 2px var(--a); }
 .scene[aria-pressed="true"]::after { content: ""; position: absolute; left: 16px; top: 16px; width: 16px; height: 16px; border-radius: 50%;
   background: #fff url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M4.5 8.5 7 11 11.5 5.5" fill="none" stroke="%231d1d1f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>') center / contain no-repeat;
   box-shadow: 0 1px 2px rgba(0,0,0,.2); }
-/* Titres de section : petites capitales grises espacées, comme sur le modèle fourni par Antho (12/11). */
+/* Titres de section : petites capitales grises espacées. */
 .titre { margin: 0; padding: 4px 12px 8px; font-size: 11px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--second); }
 .titre[hidden] { display: none; }
 .actuelle { padding-bottom: 12px; }
@@ -71,7 +71,7 @@ html.demo[data-theme="sombre"] .panneau { background: rgba(40,40,44,.82); }
 
 /* Curseur d'intensité de la pièce (design/maquette.html) : piste 8 px, poignée 20 px, un seul curseur pour toute l'appli. */
 /* Le curseur est dessiné ici, sur le modèle de celui de macOS 26 : piste fine à la couleur d'accent, poignée en gélule
-   qui devient une goutte de verre quand on la tient. Essayé et écarté le 12/11/2026 (essais/curseur_natif.py) :
+   qui devient une goutte de verre quand on la tient. Essayés et écartés (essais/curseur_natif.py) :
    le curseur par défaut de WebKit (piste épaisse cerclée de blanc) et le vrai NSSlider (poignée ronde). */
 /* Le curseur dans son creux : le soleil, la piste et le soleil se lisent comme un seul réglage. */
 .groupe { display: flex; align-items: center; gap: 8px; margin: 4px 12px 12px; padding: 8px 12px; border-radius: 8px; background: var(--creux); color: var(--texte); }
@@ -161,7 +161,7 @@ input[type=range].blanc.apres { margin-top: 12px; }
 .enregistrer[hidden] { display: none; }
 .reglages .bloc.ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 44px; padding: 0 12px; }
 /* Quitter : une carte cliquable comme celle du dessus, avec le pictogramme marche/arrêt. En texte seul, il se lisait
-   comme un libellé (Antho, 12/11). */
+   comme un libellé. */
 .quitter { display: flex; align-items: center; gap: 8px; width: 100%; height: 44px; margin-top: 12px; padding: 0 12px; border: 0; border-radius: 8px;
   background: var(--tuile); box-shadow: 0 1px 2px rgba(0,0,0,.06); color: var(--texte); font: inherit; text-align: left; cursor: pointer; transition: background .12s; }
 .quitter:hover { background: var(--avant); }

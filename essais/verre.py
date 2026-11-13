@@ -1,4 +1,4 @@
-"""Essai (12/11/2026) : le panneau en verre de macOS 26, comme les panneaux de la barre de menus du système.
+"""Essai : le panneau en verre de macOS 26, comme les panneaux de la barre de menus du système.
 
 NSPopover a un fond presque opaque. Ici : une fenêtre sans bord, un fond NSGlassEffectView, la page dedans.
 

@@ -78,7 +78,7 @@ def emplacement_app():
 def installer_app(app=None, uv=None, dossier=None):
     """Crée (ou refait) « Hue Controller.app » : un dossier d'application dont le programme lance `uv run`.
 
-    Sans lui, l'app n'existe que comme commande de terminal : Spotlight ne la trouve pas (essayé par Antho le 12/11/2026).
+    Sans lui, l'app n'existe que comme commande de terminal : Spotlight ne la trouve pas.
     """
     app = Path(emplacement_app() if app is None else app)
     uv = shutil.which("uv") if uv is None else uv
@@ -106,7 +106,7 @@ def installer_app(app=None, uv=None, dossier=None):
     os.utime(app)
     # shlex.quote : le chemin du projet peut contenir des espaces.
     # `cd` d'abord : le paquet n'est pas installé, Python le trouve dans le dossier courant (sans ça : « No module named
-    # hue_controller », constaté le 12/11/2026).
+    # hue_controller »).
     programme.write_text(f"#!/bin/sh\ncd {shlex.quote(dossier)} || exit 1\nexec {shlex.quote(uv)} run python -m hue_controller\n")
     programme.chmod(0o755)
     return app
