@@ -322,6 +322,9 @@ class App(NSObject):
         self.panneau.orderOut_(None)
         if self.travail:
             self.travail.panneau(False)
+        # Retour aux scènes pendant que le panneau est caché : il se rouvre toujours sur l'écran principal.
+        if self.page_prete:
+            self.page.evaluateJavaScript_completionHandler_("window.revenir()", None)
 
     @objc.python_method
     def donner_accent(self):

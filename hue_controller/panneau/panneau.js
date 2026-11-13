@@ -67,6 +67,10 @@ const hex = t => "#" + t.map(v => Math.round(v).toString(16).padStart(2, "0")).j
 const melange = (a, b, t) => hex(rvb(a).map((v, i) => v + (rvb(b)[i] - v) * t));
 // Couleur d'écran d'un couple (teinte 0-360, saturation 0-100) : le TSV à valeur maximale.
 const couleurDe = (h, s) => { const f = n => { const k = (n + h / 60) % 6; return 255 * (1 - s / 100 * Math.max(0, Math.min(k, 4 - k, 1))); }; return hex([f(5), f(3), f(1)]); };
+// Une couleur vue à une luminosité de lampe (1 à 100) : de 30 % de sa clarté à 1 % jusqu'à toute sa clarté à 100 %.
+// Plancher à 30 % : en dessous, la roue serait noire et illisible.
+const facteurLum = v => 0.3 + 0.7 * v / 100;
+const assombrir = (c, f) => hex(rvb(c).map(x => x * f));
 const deBlanc = k => k < 4500 ? melange("#ffb36b", "#fff3e2", (Math.max(k, 2000) - 2000) / 2500) : melange("#fff3e2", "#dbe7ff", (Math.min(k, 6500) - 4500) / 2000);
 // Bornes du blanc d'une lampe ; 2000 à 6500 tant que l'état n'en donne pas.
 const bornes = l => Array.isArray(l.kelvins) && l.kelvins.length === 2 ? l.kelvins : [2000, 6500];
@@ -370,9 +374,10 @@ const touche = r => !!r && (r.tenu || Date.now() - r.dernierGeste < 1500);
 const carteTouchee = g => g.tenu || Date.now() - g.dernierGeste < 1500 ||
   Object.values(g.reg).some(r => r.tenu || Date.now() - r.dernierGeste < 1500);
 
-// « Blanc chaud / neutre / froid » pour un blanc, « Couleur » pour une teinte ; rien si la lampe n'a pas de mode.
+// « Blanc chaud / neutre / froid » pour un blanc, « Couleur » pour une teinte, « Blanc fixe » pour une lampe sans réglage de couleur.
 function texteMode(l) {
   if (l.mode === "teinte") return " · Couleur";
+  if (l.mode == null && !(l.reglages || []).length) return " · Blanc fixe";
   if (l.mode !== "blanc") return "";
   const k = l.kelvin;
   return " · " + (k != null && k < 3300 ? "Blanc chaud" : k != null && k < 5000 ? "Blanc neutre" : "Blanc froid");
@@ -406,8 +411,12 @@ function majLignes() {
     const coul = allumee ? (lm.couleur || g.couleur) : null;
     const garde = g.tenu || Date.now() - g.dernierGeste < 1500;
     const v = garde ? Math.round(Number(g.curseur.value)) : Math.min(100, Math.max(1, Math.round(l.intensite) || 1));
+    // Le halo, la roue, la piste de température et leurs repères s'assombrissent avec la luminosité,
+    // pendant le geste comme après (demande d'Antho, 13/11).
+    const f = facteurLum(v);
+    g.el.style.setProperty("--voile", (1 - f).toFixed(3));
     g.el.classList.toggle("eteinte", !allumee);
-    g.halo.style.setProperty("--c", coul || "");
+    g.halo.style.setProperty("--c", coul ? assombrir(coul, f) : "");
     g.nom.textContent = l.nom;
     g.infos.textContent = allumee ? v + " %" + texteMode(lm) : "Éteinte";
     g.valeur.textContent = v + " %";
@@ -428,7 +437,7 @@ function majLignes() {
       blanc.el.hidden = !!roue && mode !== "blanc";
       blanc.el.setAttribute("aria-label", "Température de " + l.nom);
       // La poignée porte la couleur de la lampe quand la lampe est en blanc.
-      blanc.el.style.setProperty("--pouce", lm.mode === "blanc" && coul ? coul : "");
+      blanc.el.style.setProperty("--pouce", lm.mode === "blanc" && coul ? assombrir(coul, f) : "");
       if (!touche(blanc)) {
         const [mini, maxi] = bornes(l);
         blanc.el.min = mini; blanc.el.max = maxi;
@@ -446,7 +455,7 @@ function majLignes() {
       const a = h * Math.PI / 180, d = sat / 100 * 96;
       roue.repere.style.left = (96 + d * Math.sin(a)).toFixed(1) + "px";
       roue.repere.style.top = (96 - d * Math.cos(a)).toFixed(1) + "px";
-      roue.repere.style.background = couleurDe(h, sat);
+      roue.repere.style.background = assombrir(couleurDe(h, sat), f);
     }
     if (garde) return;
     g.curseur.value = v;
@@ -503,6 +512,24 @@ function dessiner(force) {
 
 // L'app donne la couleur d'accent choisie dans les réglages du Mac ; le navigateur garde le vert par défaut.
 window.accent = couleur => racine.style.setProperty("--inter-on", couleur);
+
+// Le panneau vient de se refermer (clic ailleurs, ou sur l'icône) : la prochaine ouverture montre les scènes, en haut,
+// sans réglages, sans carte de lampe dépliée, sans liste des pièces ouverte (demande d'Antho, 13/11).
+// Appelé pendant que le panneau est caché : rien ne bouge sous les yeux.
+window.revenir = function () {
+  onglet = "scenes";
+  defile.scenes = 0; defile.lampes = 0;
+  if (ouverte) { const g = lignes.get(ouverte); if (g) g.choix = null; ouverte = null; }
+  if (!etat) return;
+  if (reglagesOuverts) {
+    // Une adresse tapée mais pas enregistrée est oubliée.
+    if (champ) champ.value = adresseConnue();
+    basculerReglages(false);
+  }
+  fermerMenu();
+  dessiner();
+  racine.querySelectorAll(".corps").forEach(c => { c.scrollTop = 0; });
+};
 
 window.recevoir = function (nouvelEtat) {
   etat = nouvelEtat;

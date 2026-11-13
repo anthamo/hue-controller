@@ -124,7 +124,8 @@ input[type=range]:disabled { opacity: .3; cursor: default; }
 /* Chaleur du blanc : même curseur, mais la piste est un dégradé du chaud au froid. La poignée se remplit de la couleur de la lampe
    (--pouce, posée par panneau.js) avec un contour blanc de 3 px quand la lampe est en blanc. */
 .rang.sous { margin-top: 12px; }
-input[type=range].blanc::-webkit-slider-runnable-track { box-shadow: 0 0 0 1px var(--bord-fort); background: linear-gradient(to right, #ffb36b, #fff3e2 55%, #dbe7ff); }
+/* --voile (posé par panneau.js sur la carte) : un voile noir qui suit la luminosité de la lampe, sur la piste comme sur la roue. */
+input[type=range].blanc::-webkit-slider-runnable-track { box-shadow: 0 0 0 1px var(--bord-fort); background: linear-gradient(rgba(0,0,0,var(--voile,0)), rgba(0,0,0,var(--voile,0))), linear-gradient(to right, #ffb36b, #fff3e2 55%, #dbe7ff); }
 input[type=range].blanc::-webkit-slider-thumb { box-sizing: border-box; transition: transform .15s, box-shadow .15s; /* pas de fondu de la couleur : elle suit le doigt */ border: 3px solid #fff; background: var(--pouce, #fff); }
 input[type=range].blanc:active::-webkit-slider-thumb { background: var(--pouce, rgba(255,255,255,.4)); }
 input[type=range].blanc[hidden] { display: none; }
@@ -133,7 +134,7 @@ input[type=range].blanc.apres { margin-top: 12px; }
 /* Dépli d'une lampe de couleur : le sélecteur Couleur / Blanc reprend le dessin des onglets, puis la roue chromatique (192 px). */
 .pli .onglets { margin: 12px 0 0; }
 .chroma { position: relative; width: 192px; height: 192px; margin: 12px auto 0; border-radius: 50%; touch-action: none; cursor: pointer;
-  background: radial-gradient(circle closest-side, #fff, rgba(255,255,255,0)), conic-gradient(from 0deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+  background: linear-gradient(rgba(0,0,0,var(--voile,0)), rgba(0,0,0,var(--voile,0))), radial-gradient(circle closest-side, #fff, rgba(255,255,255,0)), conic-gradient(from 0deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
   box-shadow: 0 0 0 1px var(--bord); }
 .chroma[hidden] { display: none; }
 .chroma .repere { position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; box-sizing: border-box; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.3); pointer-events: none; }
