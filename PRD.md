@@ -1,105 +1,80 @@
 # PRD : les lumières dans la barre de menus du Mac
 
-Brouillon du 12/11/2026, à valider par Antho. Dossier : `hue-controller` (nom choisi par Antho).
-
-Les lignes marquées **[à confirmer]** sont des propositions de ma part, pas des choses qu'Antho a dites.
-
 ## 1. Le problème
 
-**Quel problème.** Depuis le Mac, Antho n'a rien pour changer l'ambiance ou régler une lampe. Aujourd'hui il doit retrouver son téléphone et ouvrir l'app Hue, ou se lever pour prendre la télécommande Hue (dit par Antho, 12/11).
+**Quel problème.** Depuis le Mac, rien ne permet de changer l'ambiance d'une pièce ou de régler une lampe Hue. Il faut prendre son téléphone et ouvrir l'app Hue, ou se lever jusqu'à la télécommande.
 
-**Pourquoi vrai et pourquoi maintenant.**
-- L'app qui fait ça (Hue In The Menu) est payante.
-- Le plus dur est déjà fait dans le projet du téléphone : la clé du bridge existe, `hue.py` sait lire les scènes et les lancer.
-- Second objectif, dit par Antho : dérouler un projet court avec une méthode propre (PRD, architecture, plan, puis code confié à un modèle moins coûteux) pour voir ce que ça donne.
+**Pourquoi.**
+- L'app qui le fait déjà sur Mac (Hue In The Menu) est payante.
+- Le bridge Hue a une interface locale complète et documentée : lire les pièces, les lampes et les scènes, envoyer des ordres. Il n'y a pas de service à payer ni de compte à créer.
 
-**Cible.** Antho, sur son Mac, à la maison. Personne d'autre.
+**Cible.** Une personne qui travaille sur son Mac, chez elle, avec un bridge Hue sur le même réseau.
 
 **Condition de succès.**
-- Changer d'ambiance en deux clics depuis n'importe quelle app, sans quitter ce qu'il fait.
-- Le panneau s'ouvre avec l'état réel des lampes en moins d'une demi-seconde (le bridge répond en 120 à 210 ms, mesuré le 12/11).
-- Signal d'arrêt (validé par Antho) : si après deux semaines Antho prend encore l'iPhone pour les lumières quand il est devant le Mac, l'app n'a pas trouvé sa place et on n'y ajoute rien.
+- Changer d'ambiance en deux clics depuis n'importe quelle app, sans quitter ce qu'on fait.
+- Le panneau s'ouvre sur l'état réel des lampes en moins d'une demi-seconde (le bridge répond en 120 à 210 ms).
+- Signal d'échec : si l'on prend encore son téléphone pour les lumières quand on est devant le Mac, l'app n'a pas trouvé sa place.
 
 ## 2. La solution
 
-**Description.** Une icône d'ampoule dans la barre de menus. Un clic ouvre un panneau accroché à l'icône. Tout se passe dans ce panneau : aucune fenêtre à part. **Une pièce à la fois.** Au départ, le Séjour seul (11 lampes, 22 scènes), sans sélecteur. Changé par Antho le 12/11, une fois l'app en usage : s'il y a plus d'une pièce sur le bridge, un sélecteur en bas du panneau permet d'en changer, et la dernière pièce choisie est gardée. Les noms des lampes et des scènes sont relus sur le bridge, jamais écrits en dur.
+**Description.** Une icône d'ampoule dans la barre de menus. Un clic ouvre un panneau accroché à l'icône. Tout se passe dans ce panneau, sans autre fenêtre. **Une pièce à la fois** : celle choisie à l'installation. Si le bridge a plusieurs pièces, un sélecteur en bas du panneau permet d'en changer, et la dernière pièce choisie est gardée. Les noms des pièces, des lampes et des scènes sont toujours lus sur le bridge, jamais écrits en dur.
 
 ```
                                    [ampoule]   son   wifi   heure
         +---------------------------------------+
-        |  Séjour                      ( on )   |   tout allumer / éteindre               
-        |  o-----------------#---------------   |   intensité du groupe
+        |  Salon                       ( on )   |   tout allumer / éteindre
+        |  o-----------------#---------------   |   intensité de la pièce
         |                                       |
-        |  [ Ambiances ]   [ Lampes ]           |   deux onglets
+        |  [ Scènes ]   [ Lampes ]              |   deux onglets
         |                                       |
-        |  +----------+ +----------+ +--------+ |
-        |  | Lumineux | | Détente  | | Repas  | |   une tuile par scène,
-        |  +----------+ +----------+ +--------+ |   teintée aux couleurs de la scène
-        |  +----------+ +----------+ +--------+ |
-        |  | Lecture  | | Veilleuse| |  ...   | |
-        |  +----------+ +----------+ +--------+ |
+        |  +----------+ +----------+            |
+        |  | Lumineux | | Détente  |            |   une tuile par scène,
+        |  +----------+ +----------+            |   teintée aux couleurs de la scène
+        |  +----------+ +----------+            |
+        |  | Lecture  | | Veilleuse|            |
+        |  +----------+ +----------+            |
+        |  [maison] Salon v                     |   choix de la pièce
         +---------------------------------------+
 
-   onglet Lampes :
-        |  Plafond salon               ( on )   |
-        |  o-----------#------------------      |   intensité
-        |  blanc chaud o------#------- froid    |   seulement si la lampe le permet
-        |  [ couleur ]                          |   seulement si la lampe le permet
+   onglet Lampes, une carte par lampe, rangées par zone :
+        |  (o) Plafond             85 % ( on )  |
+        |      Luminosité  o--------#--------   |   dépliée au clic
+        |      [ Couleur | Blanc ]              |   selon ce que permet la lampe
+        |      roue chromatique ou température  |
 ```
 
-**Ce que fait le panneau, par tranches.** Chaque tranche se livre seule et sert telle quelle.
+**Ce que fait le panneau.**
 
-| Tranche | Contenu |
+| Partie | Contenu |
 | --- | --- |
-| 1 | L'icône, le panneau, les scènes du Séjour en tuiles, tout allumer / tout éteindre |
-| 2 | L'intensité du groupe ; l'état réel relu à chaque ouverture |
-| 3 | L'onglet Lampes : allumer / éteindre et intensité de chaque lampe |
-| 4 | Température de blanc et couleur par lampe, pour celles qui les ont |
-| 5 | Réglages dans le panneau : adresse du bridge, état de la connexion, lancement à l'ouverture de session |
+| En-tête | Nom de la pièce, phrase d'état (« 10 lampes allumées sur 11 »), interrupteur général, accès aux réglages |
+| Pièce | Intensité de toutes les lampes de la pièce |
+| Scènes | Les scènes de la pièce en tuiles ; un clic applique |
+| Lampes | Rangées par zone. Allumer, éteindre, luminosité ; couleur et température du blanc pour les lampes qui les ont ; tout éteindre ou tout allumer par zone |
+| Réglages | Adresse du bridge et état de la connexion, lancement à l'ouverture de session, quitter |
 
 **Ce qu'on ne traite pas.**
-- Pas d'appairage dans l'app. Se connecter demande deux choses : l'adresse du bridge et une clé, que le bridge ne donne qu'après un appui sur son bouton. La clé existe déjà : elle va dans un fichier de réglages hors dépôt. Les réglages montrent l'adresse (modifiable) et l'état de la connexion (demande d'Antho). **Depuis le 12/11** : une commande d'installation fait l'appairage (appui sur le bouton du bridge), pour que quelqu'un d'autre puisse installer l'app ; toujours pas d'écran d'appairage dans le panneau.
+- Pas d'écran d'appairage dans le panneau. Se connecter demande l'adresse du bridge et une clé, que le bridge ne donne qu'après un appui sur son bouton : c'est la commande d'installation qui s'en charge, une fois. Ensuite, les réglages montrent l'adresse (modifiable) et l'état de la connexion.
 - Pas de création ni de modification de scène : ça reste dans l'app Hue.
-- Pas d'automatisation, d'horaires, de capteurs.
-- Pas d'effets (bougie, scènes dynamiques) pour le moment (Antho, 12/11).
-- Pas d'accès hors de la maison.
-- Pas de distribution (ni signature, ni installeur, ni Mac App Store).
-- Pas de photos sur les tuiles comme dans l'app Hue : le bridge ne donne qu'une référence d'image. La tuile prend les couleurs de la scène (présentes dans la réponse du bridge ; à vérifier sur pièce).
+- Pas d'automatisation, d'horaires ni de capteurs.
+- Pas d'effets (bougie, scènes dynamiques).
+- Pas d'accès hors de la maison : tout passe par le réseau local.
+- Pas de distribution signée (ni Mac App Store, ni app notarisée) : l'app s'installe depuis le code source.
+- Pas de photos sur les tuiles comme dans l'app Hue : le bridge ne donne qu'une référence d'image. La tuile prend les couleurs de la scène, qu'il donne.
 
-**Proposition de valeur.** Les lumières à un clic du travail en cours, avec une app qui tient en quelques fichiers et qu'Antho peut lire et changer.
-
-**Rollout.** Sur un seul Mac. Tranche 1 utilisée quelques jours avant d'écrire la 2. Chaque essai qui allume ou éteint de vraies lampes se fait avec le oui d'Antho juste avant.
-Ensuite, si l'app sert : l'installer sur un second Mac du foyer (MacBook M1) (souhait d'Antho). Conséquence pour l'architecture : l'installation doit tenir en une commande, et la clé se copie d'un Mac à l'autre avec le fichier de réglages.
+**Proposition de valeur.** Les lumières à un clic du travail en cours, avec une app qui tient en quelques fichiers qu'on peut lire et changer.
 
 ## 3. Décisions
 
 | # | Question | Décision |
 | --- | --- | --- |
-| 1 | Technique, sans Swift | Python (PyObjC) pour l'icône et le panneau, l'intérieur du panneau en HTML/CSS. Prouvé le 12/11 par `essais/panneau.py`. Détail dans `ARCHITECTURE.md`. |
-| 2 | Pièces | Le Séjour seul, ses 22 scènes toutes affichées. |
-| 3 | Direction visuelle | Natif (comme un réglage du Mac), retenue le 12/11. Règles dans `DESIGN.md`, maquette dans `design/maquette.html`. |
-| 4 | Nom et dépôt | `hue-controller`. Dépôt GitHub privé à créer (aujourd'hui le dossier est sauvegardé par le vault). |
+| 1 | Technique | Python (PyObjC) pour l'icône et le panneau, l'intérieur du panneau en HTML/CSS. Pas de Swift. Détail dans `ARCHITECTURE.md`. |
+| 2 | Pièces | Une pièce à la fois, toutes ses scènes affichées. Les zones (Cuisine, Salon…) servent à ranger les lampes, pas à changer de pièce. |
+| 3 | Direction visuelle | Natif : le panneau ressemble à un réglage du Mac. Règles dans `DESIGN.md`. |
+| 4 | Installation | Une commande, qui fait aussi l'appairage. Les réglages (adresse, clé, pièce) vivent hors du dossier du projet ; pour un second Mac, on peut copier ce fichier. |
 
-## Annexes
+## Ce que donne le bridge
 
-**Ce que le bridge contient (lu le 12/11/2026, lecture seule).**
-
-| Groupe              | Type  | Lampes | Scènes |
-| ------------------- | ----- | ------ | ------ |
-| Séjour              | pièce | 11     | 22     |
-
-- 10 lampes du Séjour ont intensité, température de blanc et couleur. « Plafond cuisine » n'a que l'intensité.
-- 7 des 22 scènes sont des blancs (Lumineux, Lecture, Détente...) : leurs couleurs se ressemblent, seul le nom les distingue.
-- Les couleurs de chaque scène se lisent bien sur le bridge (vérifié le 12/11) : elles servent à teinter les tuiles.
-
-**Ce que le Mac a déjà (vérifié le 12/11/2026).** Python 3.12, `uv`, Node, les outils en ligne de commande d'Apple. Ni PyObjC ni rumps installés.
-
-**Qui fait quoi (méthode).**
-
-| Étape | Livrable | Modèle |
-| --- | --- | --- |
-| 1. PRD | ce fichier, validé par Antho | le plus capable |
-| 2. Essai de faisabilité | trente lignes : une icône, un panneau, une page | le plus capable |
-| 3. Architecture + plan | `ARCHITECTURE.md` et `PLAN.md` : fichiers, contrats entre eux, tâches assez précises pour être exécutées sans deviner | le plus capable |
-| 4. Code, tranche par tranche | le code et ses tests | un modèle moins coûteux, à qui on donne le plan |
-| 5. Revue | relecture du code contre le plan, puis essai par Antho | le plus capable |
+- Chaque lampe annonce ce qu'elle sait faire : intensité seule (une ampoule « white »), intensité et température du blanc, ou intensité, température et couleur. Le panneau ne montre que les réglages qu'elle a.
+- Les couleurs de chaque scène se lisent sur le bridge : elles servent à teinter les tuiles.
+- Plusieurs scènes sont des blancs (Lumineux, Lecture, Détente…) : leurs couleurs se ressemblent, seul le nom les distingue.
