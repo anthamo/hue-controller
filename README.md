@@ -2,6 +2,8 @@
 
 Les lumières d'une pièce Philips Hue dans la barre de menus du Mac.
 
+<img src="docs/panneau.png" width="760" alt="Le panneau, à gauche l'onglet Scènes (la scène en cours et les scènes en tuiles), à droite l'onglet Lampes (une lampe dépliée, avec sa luminosité et la roue chromatique)">
+
 Le panneau permet de configurer : 
 - la scènes de la pièce
 - l'intensité globale
