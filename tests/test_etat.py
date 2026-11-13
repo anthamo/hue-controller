@@ -84,6 +84,14 @@ class TestEtat(unittest.TestCase):
         self.assertEqual(e["connexion"], "erreur")
         self.assertEqual((e["piece"], e["scenes"], e["lampes"]), (None, [], []))
 
+    def test_sans_piece_la_premiere_du_bridge(self):
+        premiere = BRUT["room"][0]["metadata"]["name"]
+        self.assertEqual(etat.nom_de_piece(BRUT, None), premiere)
+        self.assertEqual(etat.nom_de_piece(BRUT, "Grenier"), "Grenier")
+        self.assertIsNone(etat.nom_de_piece({**BRUT, "room": []}, None))
+        e = etat.construire({**BRUT, "room": []}, None)
+        self.assertEqual(e["message"], "Ce bridge n'a aucune pièce : en créer une dans l'app Hue.")
+
     def test_pieces(self):
         noms = [r["metadata"]["name"] for r in BRUT["room"]]
         self.assertEqual(len(noms), 2)

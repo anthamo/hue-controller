@@ -9,7 +9,6 @@ import tempfile
 from pathlib import Path
 
 CHEMIN = Path("~/Library/Application Support/hue-controller/reglages.json").expanduser()
-PIECE_PAR_DEFAUT = "Séjour"
 
 
 _NOM_HOTE = re.compile(r"[A-Za-z0-9.-]{1,253}")
@@ -40,7 +39,8 @@ def charger(chemin=None):
         return {
             "bridge_ip": brut["bridge_ip"],
             "cle": brut["cle"],
-            "piece": brut.get("piece") or PIECE_PAR_DEFAUT,
+            # Sans pièce, l'état prend la première du bridge (etat.construire).
+            "piece": brut.get("piece") or None,
         }
     except (OSError, ValueError, KeyError, TypeError, AttributeError):
         return None
@@ -102,7 +102,7 @@ def principal(argv=None, chemin=None):
         {
             "bridge_ip": valeurs["HUE_BRIDGE_IP"],
             "cle": valeurs["HUE_APP_KEY"],
-            "piece": PIECE_PAR_DEFAUT,
+            "piece": None,
         },
         chemin,
     )

@@ -115,12 +115,21 @@ def _scene(scene):
     }
 
 
+def nom_de_piece(brut, piece):
+    """La pièce à piloter : celle des réglages, ou la première du bridge s'ils n'en donnent pas (None s'il n'y en a aucune)."""
+    if piece is None and brut.get("room"):
+        return brut["room"][0]["metadata"]["name"]
+    return piece
+
+
 def construire(brut, piece):
     salle = next((r for r in brut["room"] if r["metadata"]["name"] == piece), None)
     pieces = [r["metadata"]["name"] for r in brut["room"]]
     if salle is None:
         # La liste reste donnée : c'est elle qui permet d'en choisir une autre.
-        return {**erreur(f"La pièce « {piece} » n'existe pas sur le bridge."), "pieces": pieces}
+        message = (f"La pièce « {piece} » n'existe pas sur le bridge." if piece is not None
+                   else "Ce bridge n'a aucune pièce : en créer une dans l'app Hue.")
+        return {**erreur(message), "pieces": pieces}
 
     appareils = {d["id"]: d for d in brut["device"]}
     lampes_par_id = {l["id"]: l for l in brut["light"]}

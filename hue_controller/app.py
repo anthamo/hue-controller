@@ -181,6 +181,7 @@ class Travail:
             self.derniere_complete = time.monotonic()
         else:
             self._brut = ordres.lire_vif(self._bridge, self._brut)
+        piece = etat_mod.nom_de_piece(self._brut, piece)
         self.id_groupe = ordres.groupe_de(self._brut, piece)
         self._publier(etat_mod.construire(self._brut, piece))
 

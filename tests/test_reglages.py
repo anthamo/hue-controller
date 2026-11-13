@@ -32,10 +32,10 @@ class TestReglages(unittest.TestCase):
         self.chemin.write_text("{pas du json")
         self.assertIsNone(reglages.charger(self.chemin))
 
-    def test_piece_par_defaut(self):
+    def test_sans_piece(self):
         self.chemin.parent.mkdir()
         self.chemin.write_text(json.dumps({"bridge_ip": IP, "cle": CLE}))
-        self.assertEqual(reglages.charger(self.chemin)["piece"], "Séjour")
+        self.assertIsNone(reglages.charger(self.chemin)["piece"])
 
     def test_mode_600(self):
         reglages.enregistrer({"bridge_ip": IP, "cle": CLE, "piece": "Séjour"}, self.chemin)
@@ -63,7 +63,7 @@ class TestReglages(unittest.TestCase):
         self.assertNotIn(CLE, sortie + erreur)
         self.assertEqual(
             reglages.charger(self.chemin),
-            {"bridge_ip": IP, "cle": CLE, "piece": "Séjour"},
+            {"bridge_ip": IP, "cle": CLE, "piece": None},
         )
 
     def test_variable_absente(self):
