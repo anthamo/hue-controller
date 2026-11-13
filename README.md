@@ -14,7 +14,7 @@ Application créée par [Anthony Hamo](https://github.com/anthamo). Projet perso
 - **Réglages** : adresse du bridge, lancement à l'ouverture de session, quitter.
 - Suit le mode clair ou sombre du Mac et sa couleur d'accent.
 
-Elle pilote **une seule pièce**, choisie à l'installation.
+Elle pilote **une pièce à la fois**, choisie à l'installation. Quand le bridge en a plusieurs, un sélecteur en bas du panneau permet d'en changer ; la dernière pièce ouverte est retenue.
 
 ## Ce qu'il faut
 
@@ -80,7 +80,7 @@ Les documents de travail racontent comment le projet a été pensé et construit
 - [ARCHITECTURE.md](ARCHITECTURE.md) : les fichiers, le contrat entre la page et Python, les décisions ;
 - [PLAN.md](PLAN.md) : le découpage en tranches et en tâches.
 
-Limites connues : une seule pièce ; pas de création de scène ; pas d'effets ; la roue chromatique ne se règle pas au clavier ; installation jamais essayée sur un second Mac.
+Limites connues : une pièce à la fois ; pas de création de scène ; pas d'effets ; la roue chromatique ne se règle pas au clavier ; installation jamais essayée sur un second Mac.
 
 ## Licence
 

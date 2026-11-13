@@ -70,7 +70,21 @@ Tranche 3 essayée par Antho le 12/11 ; refaite à sa demande en cartes dépliab
 | 5.4 | **Installer sur un autre Mac.** `installer.sh` : vérifie `uv`, prépare l'environnement, dit où copier les réglages, active le lancement automatique, lance l'app. README à jour. | `installer.sh`, `README.md` | relecture ; non essayé sur un autre Mac |
 | 5.5 | **Revue et essai réel**, avec le oui d'Antho. | | |
 
-Reste hors plan : un vrai mode sombre ; l'essai du fond de panneau sur un macOS d'avant la version 26 (MacBook de sa compagne).
+## Reste à faire (au 13/11/2026)
+
+Les cinq tranches sont faites. Ce qui n'a jamais été essayé en vrai :
+
+- l'installation sur un second Mac, et l'appairage avec un bridge (il n'a tourné que sur des faux) ;
+- le changement de pièce depuis le sélecteur ;
+- le clic sur le lien de signature ;
+- le mode sombre dans le vrai panneau ;
+- le fond du panneau sur un macOS d'avant la version 26.
+
+Ce qui reste à faire :
+
+- l'icône de l'application ;
+- écrire « Blanc fixe » sur la ligne des lampes qui n'ont que l'intensité (proposé, pas tranché) ;
+- souligner le lien de signature en permanence (proposé, pas tranché).
 
 ## Qui fait quoi
 
