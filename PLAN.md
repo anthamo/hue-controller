@@ -79,13 +79,13 @@ Ce qui n'a jamais été essayé en vrai :
 - l'installation sur un second Mac, et l'appairage avec un bridge (il n'a tourné que sur des faux) ;
 - le fond du panneau sur un macOS d'avant la version 26.
 
-Fait le 13/11, à essayer dans le vrai panneau :
+Fait le 13/11 et validé par Antho dans le vrai panneau :
 
-- « Blanc fixe » sur la ligne des lampes qui n'ont que l'intensité (accepté par Antho) ;
-- la roue chromatique et la piste de température s'assombrissent avec la luminosité de la lampe (demande d'Antho) ;
-- le panneau se rouvre toujours sur les scènes : à sa fermeture, retour à l'onglet Scènes, réglages et carte de lampe refermés (demande d'Antho).
+- « Blanc fixe » sur la ligne des lampes qui n'ont que l'intensité ;
+- le halo, la roue chromatique et la piste de température s'assombrissent avec la luminosité de la lampe ;
+- le panneau se rouvre toujours sur les scènes : à sa fermeture, retour à l'onglet Scènes, réglages et carte de lampe refermés.
 
-Le retour aux scènes à la fermeture est validé par Antho le 13/11.
+Écarté le 13/11 : chercher le bridge sur le réseau local (mDNS). Antho préfère garder le seul annuaire en ligne de Philips, plus simple (une requête, une réponse JSON) ; à défaut, `--adresse`.
 
 **Icône** (13/11) : Antho a fourni deux versions, `design/icone/sombre.png` et `claire.png`. `outils/icone.py` en fait `hue_controller/AppIcon.icns` (centre de l'image, forme arrondie de 824 px, coins transparents), que `demarrage.installer_app()` copie dans le lanceur. Version sombre retenue. Un .icns ne porte qu'une image : basculer seul entre clair et sombre demande le format d'Icon Composer, compilé par Xcode (non installé : seulement les outils en ligne de commande).
 
