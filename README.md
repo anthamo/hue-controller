@@ -81,3 +81,7 @@ Les documents de travail racontent comment le projet a été pensé et construit
 - [PLAN.md](PLAN.md) : le découpage en tranches et en tâches.
 
 Limites connues : une seule pièce ; pas de création de scène ; pas d'effets ; la roue chromatique ne se règle pas au clavier ; installation jamais essayée sur un second Mac.
+
+## Licence
+
+[MIT](LICENSE) : libre de l'utiliser, de le modifier et de le redistribuer, sans garantie.
