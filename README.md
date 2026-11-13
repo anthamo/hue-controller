@@ -2,13 +2,16 @@
 
 Les lumières d'une pièce Philips Hue dans la barre de menus du Mac.
 
-Une ampoule à côté de l'horloge. Un clic ouvre un panneau : les scènes de la pièce, l'intensité, chaque lampe avec sa luminosité, sa couleur et sa température de blanc. Pas besoin de chercher son téléphone.
+Le panneau permet de configurer : 
+- la scènes de la pièce
+- l'intensité globale
+- chaque lampe idividuellement avec sa luminosité, sa couleur et sa température de blanc.
 
-Application créée par [Anthony Hamo](https://github.com/anthamo). Projet personnel, non affilié à Philips Hue ni à Signify.
+Projet personnel, non affilié à Philips Hue.
 
-## Ce qu'elle fait
+## Ce que permet l'app
 
-- **Scènes** : toutes les scènes de la pièce, en un clic, avec la scène en cours en tête.
+- **Scènes** : Choix des scènes disponibles pour la pièce, en un clic.
 - **Pièce** : tout allumer, tout éteindre, régler l'intensité.
 - **Lampes** : rangées par zone. Pour chacune : allumer, éteindre, luminosité, couleur sur une roue chromatique, température du blanc. « Tout éteindre » par zone.
 - **Réglages** : adresse du bridge, lancement à l'ouverture de session, quitter.
@@ -18,11 +21,16 @@ Elle pilote **une pièce à la fois**, choisie à l'installation. Quand le bridg
 
 ## Ce qu'il faut
 
-- Un Mac sous macOS 26 (le panneau en verre vient de cette version ; sur une version plus ancienne, un repli existe mais n'a jamais été essayé).
+- Un Mac sous macOS 26 (travail de compatibilité en cours pour les versions plus anciennes - non testé pour le moment)
 - Un bridge Philips Hue sur le même réseau que le Mac.
 - [uv](https://docs.astral.sh/uv/), l'outil qui installe Python et ses bibliothèques.
 
-## Installer
+## Installation
+
+
+**Installer avec Claude :** Le fichier [INSTALLER_AVEC_CLAUDE.md](INSTALLER_AVEC_CLAUDE.md) contient une consigne à coller dans Claude Code : il fait l'installation pas à pas et vérifie que tout marche.
+
+**Pour l'installer manuellement :**
 
 ```sh
 git clone https://github.com/anthamo/hue-controller.git
@@ -33,13 +41,11 @@ cd hue-controller
 Le script fait quatre choses :
 
 1. il prépare l'environnement Python ;
-2. il connecte l'app au bridge : il le cherche sur le réseau, demande d'**appuyer sur le gros bouton du bridge**, puis fait choisir la pièce ;
+2. il connecte l'app au bridge : il le cherche sur le réseau, demande d'**appuyer sur le bouton du bridge**, puis fait choisir la pièce ;
 3. il crée « Hue Controller » dans le dossier Applications et active le lancement à l'ouverture de session ;
 4. il ouvre l'app.
 
 L'ampoule apparaît dans la barre de menus. Ensuite, l'app s'ouvre comme une autre : « Hue Controller » dans Spotlight ou le Launchpad.
-
-**Installer avec Claude.** Le fichier [INSTALLER_AVEC_CLAUDE.md](INSTALLER_AVEC_CLAUDE.md) contient une consigne à coller dans Claude Code : il fait l'installation pas à pas et vérifie que tout marche.
 
 ## En cas de souci
 
@@ -80,7 +86,7 @@ Les documents de travail racontent comment le projet a été pensé et construit
 - [ARCHITECTURE.md](ARCHITECTURE.md) : les fichiers, le contrat entre la page et Python, les décisions ;
 - [PLAN.md](PLAN.md) : le découpage en tranches et en tâches.
 
-Limites connues : une pièce à la fois ; pas de création de scène ; pas d'effets ; la roue chromatique ne se règle pas au clavier ; installation jamais essayée sur un second Mac.
+Limites connues : une pièce à la fois ; pas de création de scène ; pas d'effets ; la roue chromatique ne se règle pas au clavier ; pas testée sur les versions antérieures à macOS 26.
 
 ## Licence
 
