@@ -58,6 +58,8 @@ class TestLanceur(unittest.TestCase):
             infos = plistlib.loads((app / "Contents" / "Info.plist").read_bytes())
             self.assertEqual(infos["CFBundleExecutable"], "hue-controller")
             self.assertTrue(infos["LSUIElement"])
+            self.assertEqual(infos["CFBundleIconFile"], "AppIcon")
+            self.assertTrue((app / "Contents" / "Resources" / "AppIcon.icns").is_file())
             programme = app / "Contents" / "MacOS" / "hue-controller"
             self.assertTrue(os.access(programme, os.X_OK))
             self.assertIn("'/un dossier/projet'", programme.read_text())

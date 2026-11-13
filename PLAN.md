@@ -72,19 +72,26 @@ Tranche 3 essayée par Antho le 12/11 ; refaite à sa demande en cartes dépliab
 
 ## Reste à faire (au 13/11/2026)
 
-Les cinq tranches sont faites. Ce qui n'a jamais été essayé en vrai :
+Les cinq tranches sont faites. Essayés par Antho le 13/11 et validés : le changement de pièce depuis le sélecteur (pièce retenue à la relance), le clic sur le lien de signature, le mode sombre dans le vrai panneau.
+
+Ce qui n'a jamais été essayé en vrai :
 
 - l'installation sur un second Mac, et l'appairage avec un bridge (il n'a tourné que sur des faux) ;
-- le changement de pièce depuis le sélecteur ;
-- le clic sur le lien de signature ;
-- le mode sombre dans le vrai panneau ;
 - le fond du panneau sur un macOS d'avant la version 26.
 
-Ce qui reste à faire :
+Fait le 13/11, à essayer dans le vrai panneau :
 
-- l'icône de l'application ;
-- écrire « Blanc fixe » sur la ligne des lampes qui n'ont que l'intensité (proposé, pas tranché) ;
-- souligner le lien de signature en permanence (proposé, pas tranché).
+- « Blanc fixe » sur la ligne des lampes qui n'ont que l'intensité (accepté par Antho) ;
+- la roue chromatique et la piste de température s'assombrissent avec la luminosité de la lampe (demande d'Antho) ;
+- le panneau se rouvre toujours sur les scènes : à sa fermeture, retour à l'onglet Scènes, réglages et carte de lampe refermés (demande d'Antho).
+
+Le retour aux scènes à la fermeture est validé par Antho le 13/11.
+
+**Icône** (13/11) : Antho a fourni deux versions, `design/icone/sombre.png` et `claire.png`. `outils/icone.py` en fait `hue_controller/AppIcon.icns` (centre de l'image, forme arrondie de 824 px, coins transparents), que `demarrage.installer_app()` copie dans le lanceur. Version sombre retenue. Un .icns ne porte qu'une image : basculer seul entre clair et sombre demande le format d'Icon Composer, compilé par Xcode (non installé : seulement les outils en ligne de commande).
+
+Ce qui reste à faire : rien hors des essais ci-dessus.
+
+Écarté le 13/11 : souligner en permanence le lien de signature (Antho : pas besoin).
 
 ## Qui fait quoi
 

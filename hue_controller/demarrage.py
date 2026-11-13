@@ -12,6 +12,7 @@ from pathlib import Path
 ETIQUETTE = "fr.hue-controller"
 CHEMIN = Path("~/Library/LaunchAgents/fr.hue-controller.plist").expanduser()
 DOSSIER_PROJET = Path(__file__).resolve().parent.parent
+ICONE = Path(__file__).resolve().parent / "AppIcon.icns"
 
 
 def contenu(uv, dossier):
@@ -95,7 +96,14 @@ def installer_app(app=None, uv=None, dossier=None):
         "CFBundleVersion": "1",
         "CFBundleShortVersionString": "1.0",
         "LSUIElement": True,  # pas d'icône dans le Dock : l'app vit dans la barre de menus
+        "CFBundleIconFile": "AppIcon",
     }))
+    # L'icône (fabriquée par outils/icone.py) est copiée dans le lanceur : Finder, Spotlight et Launchpad la lisent là.
+    ressources = app / "Contents" / "Resources"
+    ressources.mkdir(exist_ok=True)
+    shutil.copyfile(ICONE, ressources / "AppIcon.icns")
+    # Le Finder garde l'ancienne icône en cache tant que la date du dossier ne change pas.
+    os.utime(app)
     # shlex.quote : le chemin du projet peut contenir des espaces.
     # `cd` d'abord : le paquet n'est pas installé, Python le trouve dans le dossier courant (sans ça : « No module named
     # hue_controller », constaté le 12/11/2026).
